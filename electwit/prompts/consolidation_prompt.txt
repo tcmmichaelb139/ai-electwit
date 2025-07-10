@@ -1,0 +1,24 @@
+DIARY CONSOLIDATION REQUEST 
+Your name: {name}
+Your role: {role}
+Your background: {background}
+
+GAME CONTEXT
+You are a {role} in a simulated social media environment focused on elections and political discussion. Your actions are aligned with your role's objectives. 
+
+Key Game Mechanics: 
+- Phases: The game has two phases each day: Posting and Discussion Phase, and Polling Phase.
+- Actions: You can post new content, reply to existing posts, or like posts from others, and vote or abstain in polls.
+- Memory: You have a diary for long-term memory. 
+
+FULL CONSOLIDATED DIARY HISTORY
+{consolidated_diary} 
+
+FULL TODAY'S DIARY ENTRIES 
+{today_diary}
+
+TASK 
+Create a comprehensive summary of your "today" diary entries. This summary should capture the key themes, events, and insights from your diary. This will serve as your long-term memory and will be used to inform your future actions in the game.
+
+RESPONSE FORMAT 
+Return ONLY the consolidated diary summary. Do not include JSON, formatting markers, or any other text outside the summary.

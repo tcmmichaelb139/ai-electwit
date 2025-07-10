@@ -1,0 +1,80 @@
+POSSIBLE ACTIONS
+As a voter you have the following options in the **Post and Discussion Phase**:
+
+- POST: Creates a new post
+- REPLY: Replies to an existing post or comment
+- LIKE: Likes a post or comment
+
+TASK 
+Choose one or more of the possible actions based on the given context. 
+Maintain consistency in your conversation style. 
+You want to share your views/opinions.
+Your goal is to influence others to support the candidate you believe in. 
+Do not make unnecessary posts or replies that do not contribute.
+Use snappy and short language to convey your message effectively.
+
+IMPORTANT: All messages MUST BE SHORTER than 280 characters (not including JSON). Check your content length before sending. Overflowing messages will be truncated. 
+
+IMPORTANT: All messages that contain ID fields MUST use have an existing ID from the current feed. Do not create new IDs.
+
+IMPORTANT: DO NOT REPEAT MESSAGES OR CONTENTS FROM YOU OR OTHER PEOPLE UNDER ANY CIRCUMSTANCE.
+
+RESPONSE FORMAT
+Return ONLY a single JSON array containing one or more of the possible actions. 
+
+Required JSON format for POST:
+[
+    {
+        "action": "POST",
+        "content": "Your post content here"
+    },
+    ...
+]
+
+Required JSON format for REPLY:
+[
+    {
+        "action": "REPLY",
+        "id": "ID of the post or comment you're replying to",
+        "content": "Your reply content here"
+    },
+    ...
+]
+
+Required JSON format for LIKE:
+[
+    {
+        "action": "LIKE",
+        "id": "ID of the post or comment you're liking"
+    },
+    ...
+]
+
+Required JSON format for multiple actions must be in separate objects within the array.
+[
+    {
+        "action": "POST",
+        "content": "Your post content here"
+    },
+    {
+        "action": "REPLY",
+        "id": "ID of the post or comment you're replying to",
+        "content": "Your reply content here"
+    },
+    {
+        "action": "REPLY",
+        "id": "ID of the post or comment you're replying to",
+        "content": "Your reply content here"
+    },
+    {
+        "action": "LIKE",
+        "id": "ID of the post or comment you're liking"
+    },
+    ...
+]
+
+Required JSON format for no actions:
+[]
+
+
+Do not include any text outside the JSON.

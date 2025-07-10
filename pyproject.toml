@@ -1,0 +1,4 @@
+[project]
+name = "ai-electwit"
+version = "0.1.0"
+description = "AI Twitter Election Simulation"
