@@ -1,0 +1,11 @@
+DIARY ENTRY 
+Create a diary entry based on the event you created.
+
+EVENT
+{event}
+
+TASK
+Summarize the actions taken and the intention behind them.
+
+RESPONSE FORMAT
+Return ONLY the diary entry. Do not include JSON, formatting markers, or any other text outside the summary.

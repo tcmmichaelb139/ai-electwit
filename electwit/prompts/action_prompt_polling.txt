@@ -1,3 +1,4 @@
+POSSIBLE ACTIONS
 You have the following options in the **Polling Phase**:
 
 - VOTE 

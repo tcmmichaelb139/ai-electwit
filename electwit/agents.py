@@ -8,17 +8,14 @@ from electwit.clients import BaseModelClient
 logger = logging.getLogger(__name__)
 
 
-class ElectionAgent:
-    """
-    Represents an agent (voter/candidate) in the simulation.
-    """
+class BaseAgent:
+    """Base agent for election agent and eventer agent"""
 
     def __init__(
         self,
         name: str,
         client: BaseModelClient,
         role: str,
-        background: str,
         chance_to_act: float = 0.5,
         prompt_dir: Optional[str] = None,
     ):
@@ -34,24 +31,12 @@ class ElectionAgent:
         self.name: str = name
         self.client: BaseModelClient = client
         self.role: str = role
-        self.background: str = background
         self.chance_to_act: float = chance_to_act
         self.prompt_dir: Optional[str] = prompt_dir
 
         self.journal: List[str] = []  # used for debugging
         self.today_diary: List[str] = []  # short term memory (of the day)
         self.consolidated_diary: List[str] = []  # long term memory
-
-        self.actions_in_hour: List[dict] = (
-            []
-        )  # actions taken by the agent in the current hour
-
-        logger.info(
-            f"Initialized {self.role} agent: {self.name} with model {self.client.model_name}"
-        )
-        self.add_journal_entry(
-            f"Initialized {self.role} agent: {self.name} with model {self.client.model_name}"
-        )
 
     def add_journal_entry(self, entry: str):
         """Adds string entry to the agent's journal for debugging purposes."""
@@ -101,7 +86,6 @@ class ElectionAgent:
             consolidation_prompt.format(
                 name=self.name,
                 role=self.role,
-                background=apply_background_prompt(self.background),
                 consolidated_diary=consolidated_input,
                 today_diary=today_diary_input,
             )
@@ -150,6 +134,36 @@ class ElectionAgent:
 
         return today_diary
 
+
+class ElectionAgent(BaseAgent):
+    """
+    Represents an agent (voter/candidate) in the simulation.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        client: BaseModelClient,
+        role: str,
+        background: str,
+        chance_to_act: float = 0.5,
+        prompt_dir: Optional[str] = None,
+    ):
+        super().__init__(name, client, role, chance_to_act, prompt_dir)
+
+        self.background: str = background
+
+        self.actions_in_hour: List[dict] = (
+            []
+        )  # actions taken by the agent in the current hour
+
+        logger.info(
+            f"Initialized {self.role} ElectionAgent: {self.name} with model {self.client.model_name}"
+        )
+        self.add_journal_entry(
+            f"Initialized {self.role} ElectionAgent: {self.name} with model {self.client.model_name}"
+        )
+
     def act_posting(
         self,
         hour: int,
@@ -157,16 +171,15 @@ class ElectionAgent:
         candidates: str,
         polling_numbers: str,
         current_feed: str,
+        recent_events: str,
     ):
         """Simulates the posting/discussion phase"""
 
         logger.info(
-            f"{self.name} ({self.role}) is acting (Posting and Discussion) at hour {hour}."
+            f"{self.name} ({self.role}) is acting (Posting and Discussion) at day {day}, hour {hour}."
         )
 
-        content_prompt = load_prompt(
-            "content_prompt_posting.txt", self.prompt_dir
-        ).format(
+        content_prompt = load_prompt("content_prompt.txt", self.prompt_dir).format(
             name=self.name,
             current_phase="Posting and Discussion",
             current_day=day,
@@ -177,9 +190,10 @@ class ElectionAgent:
             todays_diary=self.formatted_today_diary(),
             prior_poll_numbers=polling_numbers,
             current_feed=current_feed,
+            recent_events=recent_events,
         )
 
-        actions_prompt = load_prompt("actions_posting.txt", self.prompt_dir)
+        actions_prompt = load_prompt("action_prompt_posting.txt", self.prompt_dir)
 
         response = self.client.generate_response_json_list(
             prompt=content_prompt + "\n\n" + actions_prompt,
@@ -213,7 +227,7 @@ class ElectionAgent:
                 actions_prompt += f"{action['action']}: {action['content']}\n"
 
         action_diary_entry = load_prompt(
-            "actions_diary_entry.txt", self.prompt_dir
+            "action_prompt_posting_diary_entry.txt", self.prompt_dir
         ).format(
             actions=actions_prompt,
         )
@@ -230,25 +244,34 @@ class ElectionAgent:
 
         self.add_today_diary_entry(f"Day: {day}, Hour: {hour}: {response}")
 
-    def act_polling(self, hour: int, day: int, candidates: str) -> dict[str, str]:
+    def act_polling(
+        self,
+        hour: int,
+        day: int,
+        candidates: str,
+        polling_numbers: str,
+        current_feed: str,
+        recent_events: str,
+    ) -> dict[str, str]:
         """Simulates the polling phase"""
 
         logger.info(f"{self.name} ({self.role}) is acting (Polling) at hour {hour}.")
 
-        content_prompt = load_prompt(
-            "content_prompt_polling.txt", self.prompt_dir
-        ).format(
+        content_prompt = load_prompt("content_prompt.txt", self.prompt_dir).format(
             name=self.name,
-            current_phase="Polling",
+            current_phase="Posting and Discussion",
             current_day=day,
             current_hour=hour,
             background=apply_background_prompt(self.background),
             candidates=candidates,
             consolidated_diary=self.formatted_consolidated_diary(),
             todays_diary=self.formatted_today_diary(),
+            prior_poll_numbers=polling_numbers,
+            current_feed=current_feed,
+            recent_events=recent_events,
         )
 
-        actions_prompt = load_prompt("actions_polling.txt", self.prompt_dir)
+        actions_prompt = load_prompt("action_prompt_polling.txt", self.prompt_dir)
 
         response = self.client.generate_response_json_list(
             prompt=content_prompt + "\n\n" + actions_prompt
@@ -259,5 +282,123 @@ class ElectionAgent:
     def get_todays_actions(self) -> List[dict]:
         return self.actions_in_hour
 
+    def name_and_background(self) -> str:
+        """returns the name and background"""
+        return (
+            f"Name: {self.name}\nBackground: {apply_background_prompt(self.background)}"
+        )
+
     def __str__(self):
-        return f"name: {self.name} ({self.client.model_name}), role: {self.role}, chance to act: {self.chance_to_act}"
+        return f"""----------
+Name: {self.name}
+Model: {self.client.model_name}
+Role: {self.role}
+Chance to act: {self.chance_to_act}
+Background: {apply_background_prompt(self.background)}
+---------"""
+
+
+class Event:
+    """
+    Represents an event
+    """
+
+    def __init__(self, content: str, day: int, hour: int):
+        """inits event"""
+
+        self.content = content
+        self.day = day
+        self.hour = hour
+
+    def __str__(self):
+        return f"Event on day {self.day}, hour {self.hour}: {self.content}"
+
+
+class EventorAgent(BaseAgent):
+    """
+    Represents an event creator (eventer)
+    Also stores the events
+    """
+
+    def __init__(
+        self,
+        name: str,
+        client: BaseModelClient,
+        role: str,
+        chance_to_act: float = 0.5,
+        prompt_dir: Optional[str] = None,
+    ):
+        super().__init__(name, client, role, chance_to_act, prompt_dir)
+
+        self.events: List[Event] = []
+
+    def create_event(self, day: int, hour: int, feed: str, event_limit: int) -> Event:
+        """Creates event"""
+
+        logger.info(f"Eventer creating event: Day: {day}, Hour: {hour}")
+
+        content_prompt = load_prompt(
+            "content_prompt_eventer.txt", self.prompt_dir
+        ).format(
+            day=day,
+            hour=hour,
+            feed=feed,
+            previous_events=self.get_formatted_events(limit=event_limit),
+            today_diary=self.formatted_today_diary(),
+            consolidated_diary=self.formatted_consolidated_diary(),
+        )
+
+        action_prompt = load_prompt("action_prompt_eventer.txt", self.prompt_dir)
+
+        response = self.client.generate_response(
+            content_prompt + "\n\n" + action_prompt
+        )
+
+        if not response:
+            logger.error(
+                f"Failed to generate event content for {self.name} ({self.role}). Response was empty."
+            )
+            return Event(content="(No event occurred)", day=day, hour=hour)
+
+        event = Event(content=response, day=day, hour=hour)
+        self.events.append(event)
+
+        logger.info(f"Event created: {event.content} on Day {day}, Hour {hour}")
+
+        # add diary entry after creating the event
+
+        diary_entry_prompt = load_prompt(
+            "action_prompt_eventer_diary_entry.txt", self.prompt_dir
+        ).format(event=str(event))
+
+        diary_response = self.client.generate_response(
+            content_prompt + "\n\n" + diary_entry_prompt
+        )
+
+        if not diary_response:
+            logger.error(
+                f"Failed to generate diary entry for event for {self.name} (Day {day}, Hour {hour}). Response was empty."
+            )
+            diary_response = "(No diary entry generated)"
+
+        self.add_today_diary_entry(f"Day: {day}, Hour: {hour}: {diary_response}")
+
+        return event
+
+    def get_formatted_events(self, limit: int) -> str:
+        """Formats the events for the prompt"""
+        if not self.events:
+            logger.warning(f"{self.name} has no events to format.")
+            return "(No events)"
+
+        formatted_events = "\n\n".join(str(event) for event in self.events[-limit:])
+
+        return formatted_events
+
+    def __str__(self):
+        return f"""----------
+Name: {self.name}
+Model: {self.client.model_name}
+Role: {self.role}
+Chance to act: {self.chance_to_act}
+---------"""

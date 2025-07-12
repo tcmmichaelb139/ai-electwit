@@ -106,7 +106,7 @@ class BaseModelClient:
                 logger.warning(
                     f"[{self.model_name}] Response is not a list: {response_json}. "
                 )
-                return []
+                return [response_json]
 
             return response_json
         except json.JSONDecodeError as e:
@@ -228,7 +228,12 @@ def load_model_client(
     Loads a model client based on the model name.
     """
 
-    if "openrouter" in model_name or "deepseek" in model_name:
+    if (
+        "openrouter" in model_name
+        or "deepseek" in model_name
+        or "mistral" in model_name
+        or "llama" in model_name
+    ):
         return OpenRouterClient(model_name=model_name, prompt_dir=prompt_dir)
     elif "gemini" in model_name:
         return GeminiClient(model_name=model_name, prompt_dir=prompt_dir)

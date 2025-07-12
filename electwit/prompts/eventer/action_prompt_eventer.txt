@@ -1,0 +1,7 @@
+TASK
+You want to create events to emulate real like occurances. Your events must be realistic and connected to the current political climate. You are allowed to create events of any topic. The event should be newsworthy and likely to generate significant online discussion.
+
+RESPONSE FORMAT
+Return ONLY the event information. This means having a heading with a short event titlel, followed by a description of the event. The description should be detailed, providing context, implications, and any relevant details that would make the event feel real and impactful.
+
+Do not include JSON, formatting markers, or any other text outside the event content.

@@ -6,7 +6,7 @@ import random
 from typing import List, Optional
 
 from electwit.platform import Platform
-from electwit.agents import ElectionAgent
+from electwit.agents import ElectionAgent, EventorAgent
 from electwit.clients import load_model_client
 from electwit.utils import (
     load_prompt,
@@ -28,6 +28,7 @@ class ElecTwit:
         self,
         people_models: str = "openrouter/cypher-alpha:free;10",
         candidate_models: str = "openrouter/cypher-alpha:free;2",
+        eventer_model: str = "openrouter/cypher-alpha:free",
     ):
         """
         Initialize the ElecTwit simulation.
@@ -44,6 +45,16 @@ class ElecTwit:
         self.people_agents = self.initialize_agents(self.people_models, "voter")
         self.candidate_agents = self.initialize_agents(
             self.candidate_models, "candidate", different=True
+        )
+        self.eventer_agent = EventorAgent(
+            name="Eventer",
+            client=load_model_client(eventer_model, "electwit/prompts/eventer"),
+            role="eventer",
+            chance_to_act=random_number(0.1, 0.5),
+            prompt_dir=os.path.join("electwit", "prompts", "eventer"),
+        )
+        self.eventer_agent.client.set_system_prompt(
+            load_prompt("system_prompt_eventer.txt", "electwit/prompts/eventer")
         )
 
         self._log_people()
@@ -107,7 +118,12 @@ class ElecTwit:
 
         for agent in self.people_agents + self.candidate_agents:
             vote = agent.act_polling(
-                hour=0, day=0, candidates=self._get_candidates_names()
+                hour=0,
+                day=0,
+                candidates=self._get_candidates_names(),
+                polling_numbers=self._get_most_recent_polling(),
+                current_feed=self.platform.get_feed_as_string(limit=10),
+                recent_events=self.eventer_agent.get_formatted_events(limit=10),
             )
 
             action = get_closest_response(
@@ -140,9 +156,19 @@ class ElecTwit:
 
         self.day += 1
 
-        for hour in range(9, 18):  # Simulating from 9 AM to 5 PM
+        for hour in range(9, 18):
             combined = self.people_agents + self.candidate_agents
-            random.shuffle(combined)  # Shuffle to randomize order of actions
+            random.shuffle(combined)
+
+            # create events
+            if self.eventer_agent.chance_to_act > random_number(0, 1):
+                self.eventer_agent.create_event(
+                    day=self.day,
+                    hour=hour,
+                    feed=self.platform.get_feed_as_string(limit=10),
+                    event_limit=10,
+                )
+
             for agent in combined:
                 if random_number(0, 1) < agent.chance_to_act:
                     agent.act_posting(
@@ -151,6 +177,7 @@ class ElecTwit:
                         candidates=self._get_candidates_names(),
                         polling_numbers=self._get_most_recent_polling(),
                         current_feed=self.platform.get_feed_as_string(limit=10),
+                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
                     )
 
                     actions = agent.get_todays_actions()
@@ -170,6 +197,8 @@ class ElecTwit:
 
         for agent in self.people_agents + self.candidate_agents:
             agent.consolidate_diary(self.day)
+
+        self.eventer_agent.consolidate_diary(self.day)
 
     def final_polling(self) -> dict[str, int]:
         """
@@ -235,6 +264,13 @@ class ElecTwit:
                 for day, poll in enumerate(self.polling_history, start=1):
                     f.write(f"Day {day}: {poll}\n")
 
+                f.write("\n\n--- Events: ---\n")
+                f.write(
+                    self.eventer_agent.get_formatted_events(
+                        len(self.eventer_agent.events)
+                    )
+                )
+
                 f.write("\n\n--- People Agents: ---\n")
                 for agent in self.people_agents:
                     f.write(
@@ -250,6 +286,13 @@ class ElecTwit:
                         f"Consolidated Diary: {agent.formatted_consolidated_diary()}\n"
                         f"Today's Diary: {agent.formatted_today_diary()}\n"
                     )
+
+                f.write("\n\n--- Eventer Agent: ---\n")
+                f.write(
+                    str(self.eventer_agent) + "\n"
+                    f"Consolidated Diary: {self.eventer_agent.formatted_consolidated_diary()}\n"
+                    f"Today's Diary: {self.eventer_agent.formatted_today_diary()}\n"
+                )
 
     def _log_people(self):
         logger.info("People in the simulation:")

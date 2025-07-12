@@ -16,3 +16,9 @@ Candidates: {candidates}
 
 Consolidated Diary: {consolidated_diary}
 Today's Diary: {todays_diary}
+
+Prior Poll Numbers: {prior_poll_numbers}
+
+Current Feed: {current_feed}
+
+Recent Events: {recent_events}

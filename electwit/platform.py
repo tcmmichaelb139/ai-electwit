@@ -157,7 +157,7 @@ class Platform:
         - limit (int): The maximum number of posts to return.
         """
 
-        feed = self.platform[-limit:]
+        feed = self.platform[-limit:].copy()
         random.shuffle(feed)
 
         return feed

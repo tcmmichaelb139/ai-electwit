@@ -9,11 +9,12 @@ You will be given:
 - Your recent private diary entries (for inner thoughts and reasoning).
 - The current poll numbers from the previous day.
 - Your current feed of posts and replies. 
+- The most recent events that have occured in the simulation.
 - A list of possible actions you can take.
 
 There are two phases during each day: 
 1. **Posting and Discussion Phase**: You can post new content or reply to existing posts. You can also like posts from others. 
-2. **Polling Phase**: You will vote in a poll about the candidate you support. Note that you will not be given the poll numbers of the previous day or the feed when you are in the polling phase.
+2. **Polling Phase**: You will vote in a poll about the candidate you support. 
 
 According to the guidelines of the platform, all messages MUST BE SHORTER than 280 characters (not including JSON).
 

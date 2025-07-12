@@ -192,6 +192,10 @@ def apply_background_prompt(background: dict) -> str:
     """
     Applies the background prompt to create a formatted string.
     """
+
+    if not background:
+        return ""
+
     return create_background_prompt(
         age=background["age"],
         race=background["race"],
