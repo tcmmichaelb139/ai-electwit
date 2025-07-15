@@ -3,3 +3,4 @@ google-genai
 pytest
 faker
 thefuzz
+json-repair

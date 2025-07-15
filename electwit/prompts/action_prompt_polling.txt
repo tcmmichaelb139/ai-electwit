@@ -7,6 +7,8 @@ You have the following options in the **Polling Phase**:
 TASK 
 Choose one of the possible actions based on the given context. Only choose VOTE if you are certain about the candidate you want to support. If you are unsure or do not wish to vote, choose ABSTAIN. 
 
+IMPORTANT: If you choose VOTE, ensure that you specify the candidate's name correctly. If you do not specify a candidate when voting, it will be treated as an ABSTAIN.
+
 RESPONSE FORMAT
 Return ONLY a single JSON object containing one of the possible actions.
 

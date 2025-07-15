@@ -8,6 +8,8 @@ from typing import Optional, List
 from openai import OpenAI
 from google import genai
 from google.genai import types
+import json_repair
+
 
 from electwit.utils import load_prompt
 
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 logging.getLogger("openai").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("google_genai").setLevel(logging.ERROR)
 
 
 class BaseModelClient:
@@ -30,7 +33,7 @@ class BaseModelClient:
     def __init__(self, model_name: str, prompt_dir: Optional[str] = None):
         self.model_name = model_name
         self.client = None
-        self.max_tokens = 16000
+        self.max_tokens = 5000
         self.prompt_dir = prompt_dir
         self.system_prompt = load_prompt("system_prompt.txt", self.prompt_dir)
 
@@ -51,34 +54,6 @@ class BaseModelClient:
         """
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    def parse_response_json(self, response: str):
-        """
-        Prases the response from LLM
-        Returns the response as a string
-        """
-
-        response = response.strip()
-
-        if not response:
-            logger.warning(f"[{self.model_name}] Empty response generated.")
-            return ""
-
-        try:
-            response_json = json.loads(response)
-
-            if not isinstance(response_json, (dict, list)):
-                logger.warning(
-                    f"[{self.model_name}] Response is not a dict or list: {response_json}. "
-                )
-                return ""
-
-            return response_json
-        except json.JSONDecodeError as e:
-            logger.error(
-                f"[{self.model_name}] Failed to parse JSON response: {e}. Response: {response}"
-            )
-            return ""
-
     def generate_response_json_list(self, prompt: str) -> Optional[List[dict]]:
         """
         Returns the response in JSON format
@@ -89,7 +64,7 @@ class BaseModelClient:
 
         if not response:
             logger.warning(f"[{self.model_name}] Empty response generated.")
-            return
+            return []
 
         # check for [ and ]
         code_fence_pattern = r"(?:.|\n)*?(\[(?:.|\n)*?\])(?:.|\n)*?"
@@ -99,21 +74,15 @@ class BaseModelClient:
             response = matches.group(1).strip()
             logger.debug(f"[{self.model_name}] Cleaned JSON response: {response}")
 
-        try:
-            response_json = json.loads(response)
+        response_json = json_repair.loads(response)
 
-            if not isinstance(response_json, list):
-                logger.warning(
-                    f"[{self.model_name}] Response is not a list: {response_json}. "
-                )
-                return [response_json]
-
-            return response_json
-        except json.JSONDecodeError as e:
-            logger.error(
-                f"[{self.model_name}] Failed to parse JSON response: {e}. Response: {response}"
+        if not isinstance(response_json, list):
+            logger.warning(
+                f"[{self.model_name}] Response is not a list: {response_json}. "
             )
-            return []
+            return [response_json]
+
+        return response_json
 
 
 class OpenRouterClient(BaseModelClient):
@@ -205,6 +174,9 @@ class GeminiClient(BaseModelClient):
                     system_instruction=self.system_prompt,
                     temperature=temperature,
                     max_output_tokens=self.max_tokens,
+                    thinking_config=types.ThinkingConfig(
+                        thinking_budget=512,
+                    ),
                 ),
             )
 
@@ -233,6 +205,8 @@ def load_model_client(
         or "deepseek" in model_name
         or "mistral" in model_name
         or "llama" in model_name
+        or "openai" in model_name
+        or "grok" in model_name
     ):
         return OpenRouterClient(model_name=model_name, prompt_dir=prompt_dir)
     elif "gemini" in model_name:

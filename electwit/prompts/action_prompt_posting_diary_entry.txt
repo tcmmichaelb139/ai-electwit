@@ -1,5 +1,5 @@
 DIARY ENTRY 
-Create a diary entry based on your following action. 
+Create a diary entry based on your following action for the current day and hour. 
 
 ACTION 
 {actions}

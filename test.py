@@ -1,2 +1,1 @@
-test = ""
-print(not test)
+import 

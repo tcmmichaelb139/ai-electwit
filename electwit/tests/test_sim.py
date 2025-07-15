@@ -13,9 +13,9 @@ def test_simulation():
     days = 10
 
     sim = ElecTwit(
-        people_models="deepseek/deepseek-chat:free;7,mistralai/ministral-3b;4,meta-llama/llama-3.1-8b-instruct;4,gemini-2.5-flash-preview-04-17;4",
-        candidate_models="deepseek/deepseek-chat:free;1,gemini-2.5-flash-preview-04-17;1",
-        eventer_model="deepseek/deepseek-chat:free",
+        people_models="openai/gpt-4o-mini;4,mistralai/devstral-medium;4,meta-llama/llama-4-maverick;4,x-ai/grok-3-mini;4",
+        candidate_models="openai/gpt-4o-mini;1,x-ai/grok-3-mini;1",
+        eventer_model="gemini-2.5-flash-lite-preview-06-17",
     )
 
     sim.run_simulation(days=days)

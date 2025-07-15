@@ -191,6 +191,9 @@ class Platform:
             for comment in post.replies:
                 result += self._comment_thread_string(comment, indent="  ")
 
+        if not result:
+            return "Feed is empty."
+
         return result.strip()
 
     def __str__(self):

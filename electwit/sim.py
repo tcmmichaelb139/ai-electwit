@@ -50,8 +50,8 @@ class ElecTwit:
             name="Eventer",
             client=load_model_client(eventer_model, "electwit/prompts/eventer"),
             role="eventer",
-            chance_to_act=random_number(0.1, 0.5),
-            prompt_dir=os.path.join("electwit", "prompts", "eventer"),
+            chance_to_act=random_number(0.3, 0.7),
+            prompt_dir=os.path.join("electwit", "prompts"),
         )
         self.eventer_agent.client.set_system_prompt(
             load_prompt("system_prompt_eventer.txt", "electwit/prompts/eventer")
@@ -82,7 +82,7 @@ class ElecTwit:
 
             count = int(count)
             for _ in range(count):
-                client = load_model_client(model_name, "electwit/prompts")
+                client = load_model_client(model_name, f"electwit/prompts/{role}")
 
                 client.set_system_prompt(
                     load_prompt(f"system_prompt_{role}.txt", f"electwit/prompts/{role}")
@@ -119,7 +119,7 @@ class ElecTwit:
         for agent in self.people_agents + self.candidate_agents:
             vote = agent.act_polling(
                 hour=0,
-                day=0,
+                day=self.day,
                 candidates=self._get_candidates_names(),
                 polling_numbers=self._get_most_recent_polling(),
                 current_feed=self.platform.get_feed_as_string(limit=10),
@@ -132,6 +132,14 @@ class ElecTwit:
             )
 
             if action == "VOTE":
+                if not vote.get("candidate"):
+                    logger.warning(
+                        f"{agent.name} voted without specifying a candidate. Defaulting to abstain."
+                    )
+                    results["ABSTAIN"] += 1
+                    agent.add_journal_entry("Voted without specifying a candidate.")
+                    continue
+
                 candidate = get_closest_response(
                     testing_text=vote["candidate"],
                     responses=self._get_candidates_names_list(),
@@ -165,6 +173,7 @@ class ElecTwit:
                 self.eventer_agent.create_event(
                     day=self.day,
                     hour=hour,
+                    recent_poll=self._get_most_recent_polling(),
                     feed=self.platform.get_feed_as_string(limit=10),
                     event_limit=10,
                 )
@@ -229,8 +238,11 @@ class ElecTwit:
             return "No polling history available."
 
         latest_poll = self.polling_history[-1]
-        return "; ".join(
-            [f"{candidate}: {votes} votes" for candidate, votes in latest_poll.items()]
+        return "\n".join(
+            [
+                f"{candidate} has {votes} votes"
+                for candidate, votes in latest_poll.items()
+            ]
         )
 
     def run_simulation(self, days: int = 7):
@@ -250,7 +262,7 @@ class ElecTwit:
                 )
             logger.info(f"{candidate.name}: {votes} votes")
         except Exception as e:
-            logger.error(f"An error occurred during the simulation: {e}")
+            logger.exception(f"An error occurred during the simulation: {e}")
             raise
         finally:
             logger.info("Simulation completed. Saving results...")

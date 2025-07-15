@@ -19,6 +19,8 @@ IMPORTANT: All messages that contain ID fields MUST use have an existing ID from
 
 IMPORTANT: DO NOT REPEAT MESSAGES OR CONTENTS FROM YOU OR OTHER PEOPLE UNDER ANY CIRCUMSTANCE.
 
+IMPORTANT: You are limited to a maximum of 10 actions per turn. Do not exceed this limit.
+
 RESPONSE FORMAT
 Return ONLY a single JSON array containing one or more of the possible actions. 
 

@@ -1,7 +1,7 @@
 Day: {day}
 Hour: {hour}
 
-Current Feed: {feed}
+Most recent poll: {poll}
 
 Previous Events: {previous_events}
 
