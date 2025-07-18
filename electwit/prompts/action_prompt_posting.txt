@@ -1,5 +1,5 @@
 POSSIBLE ACTIONS
-As a voter you have the following options in the **Post and Discussion Phase**:
+As a participant in the simulation you have the following options and only these options in the **Post and Discussion Phase**:
 
 - POST: Creates a new post
 - REPLY: Replies to an existing post or comment
@@ -11,13 +11,11 @@ Maintain consistency in your conversation style.
 You want to share your views/opinions.
 Your goal is to influence others to support the candidate you believe in. 
 Do not make unnecessary posts or replies that do not contribute.
-Use snappy and short language to convey your message effectively.
+You may use acronyms, emojis, or abbreviations to keep your messages concise, but ensure they are still clear and understandable.
 
 IMPORTANT: All messages MUST BE SHORTER than 280 characters (not including JSON). Check your content length before sending. Overflowing messages will be truncated. 
 
 IMPORTANT: All messages that contain ID fields MUST use have an existing ID from the current feed. Do not create new IDs.
-
-IMPORTANT: DO NOT REPEAT MESSAGES OR CONTENTS FROM YOU OR OTHER PEOPLE UNDER ANY CIRCUMSTANCE.
 
 IMPORTANT: You are limited to a maximum of 10 actions per turn. Do not exceed this limit.
 
@@ -78,5 +76,26 @@ Required JSON format for multiple actions must be in separate objects within the
 Required JSON format for no actions:
 []
 
+EXAMPLE
+[
+    {
+        "action": "POST",
+        "content": "this is unbelievable. i can't believe the government is taking away my rights!"
+    },
+    {
+        "action": "REPLY",
+        "id": "c12b1b18fc",
+        "content": "I completely agree with your point on healthcare reform!"
+    },
+    {
+        "action": "LIKE",
+        "id": "f1c323c41x"
+    }
+]
+
+Reasoning: 
+- The first action is to POST a new message expressing disbelief about government actions.
+- The second action is a REPLY to an existing post with ID "c12b1b18fc", agreeing with a point on healthcare reform.
+- The third action is a LIKE on a post with ID "f1c323c41x".
 
 Do not include any text outside the JSON.

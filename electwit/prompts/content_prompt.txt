@@ -3,7 +3,6 @@ You are in a simulated social media environment focused on elections and politic
 
 Use the following information to guide your interactions:
 
-Your Name: {name}
 Phase: {current_phase}
 Current Day: {current_day}
 Current Hour: {current_hour}

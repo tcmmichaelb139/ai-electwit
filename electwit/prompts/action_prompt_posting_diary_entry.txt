@@ -8,4 +8,4 @@ TASK
 Summarize the actions taken and the intention behind them.
 
 RESPONSE FORMAT
-Return ONLY the diary entry. Do not include JSON, formatting markers, or any other text outside the summary.
+Return ONLY the diary entry. Do not include JSON, formatting markers, the current time,  or any other text outside the summary.

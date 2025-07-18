@@ -1,5 +1,5 @@
 POSSIBLE ACTIONS
-You have the following options in the **Polling Phase**:
+You have the following options and only these options in the **Polling Phase**:
 
 - VOTE 
 - ABSTAIN
@@ -24,6 +24,14 @@ Required JSON format for ABSTAIN:
 [
     {
         "action": "ABSTAIN"
+    }
+]
+
+EXAMPLE
+[
+    {
+        "action": "VOTE",
+        "candidate": "John Doe"
     }
 ]
 

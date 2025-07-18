@@ -1,22 +1,24 @@
 import os
+import json
 import logging
-from time import sleep
+import time
 import random
 
 from typing import List, Optional
 
+from electwit.log_setup import get_log_dir
 from electwit.platform import Platform
 from electwit.agents import ElectionAgent, EventorAgent
 from electwit.clients import load_model_client
+import asyncio
 from electwit.utils import (
     load_prompt,
-    random_new_name,
     create_random_background,
     random_number,
     get_closest_response,
 )
 
-SEED = os.getenv("SEED")
+SEED = os.getenv("SEED") or 42
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,7 @@ class ElecTwit:
 
         self.day = 0
         self.polling_history = []
+        self.who_voted_for_who_history = []
         self.platform = Platform()
 
     def initialize_agents(
@@ -95,37 +98,50 @@ class ElecTwit:
 
                 agents.append(
                     ElectionAgent(
-                        name=random_new_name(),
+                        name=background["name"],
                         client=client,
                         role=role,
                         background=background,
-                        chance_to_act=random_number(0.5, 1),
+                        chance_to_act=random_number(0.4, 0.9),
                         prompt_dir=os.path.join("electwit", "prompts"),
                     )
                 )
 
         return agents
 
-    def run_polling(self):
+    async def run_polling(self):
         """
         Runs an initial polling to get current preferences
         """
 
+        logger.info("Running initial polling...")
+
         results = {"ABSTAIN": 0}
+
+        who_voted_for_who = {}
 
         for candidate in self.candidate_agents:
             results[candidate.name] = 0
 
+        tasks = []
         for agent in self.people_agents + self.candidate_agents:
-            vote = agent.act_polling(
-                hour=0,
-                day=self.day,
-                candidates=self._get_candidates_names(),
-                polling_numbers=self._get_most_recent_polling(),
-                current_feed=self.platform.get_feed_as_string(limit=10),
-                recent_events=self.eventer_agent.get_formatted_events(limit=10),
+            tasks.append(
+                asyncio.create_task(
+                    agent.act_polling(
+                        hour=18,
+                        day=self.day,
+                        candidates=self._get_candidates_names(),
+                        polling_numbers=self._get_most_recent_polling(),
+                        current_feed=self.platform.get_feed_as_string(limit=10),
+                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                        final_poll=False,
+                    )
+                )
             )
 
+        votes = await asyncio.gather(*tasks)
+
+        for agent, vote in zip(self.people_agents + self.candidate_agents, votes):
             action = get_closest_response(
                 testing_text=vote["action"],
                 responses=["VOTE", "ABSTAIN"],
@@ -142,21 +158,109 @@ class ElecTwit:
 
                 candidate = get_closest_response(
                     testing_text=vote["candidate"],
-                    responses=self._get_candidates_names_list(),
+                    responses=self._get_candidates_names_list() + ["ABSTAIN"],
                 )
                 results[candidate] += 1
+
+                who_voted_for_who[agent.name] = candidate
 
                 agent.add_journal_entry(f"Voted for {vote['candidate']}")
             elif action == "ABSTAIN":
                 results["ABSTAIN"] += 1
 
+                who_voted_for_who[agent.name] = "ABSTAIN"
+
                 agent.add_journal_entry(f"Abstained from voting")
 
         logger.info(f"Polling results Day {self.day}: {results}")
 
-        self.polling_history.append(results)
+        self.polling_history.append(results.copy())
 
-    def run_day(self):
+        self.who_voted_for_who_history.append(who_voted_for_who.copy())
+
+    async def final_polling(self) -> dict[str, int]:
+        """
+        Returns the final polling results as a dictionary.
+        """
+
+        logger.info("Running initial final polling...")
+
+        results = {
+            "ABSTAIN": 0
+        }  # abstaining is not allowed but we just keep it if it happens
+
+        who_voted_for_who = {}
+
+        for candidate in self.candidate_agents:
+            results[candidate.name] = 0
+
+        tasks = []
+        for agent in self.people_agents + self.candidate_agents:
+            tasks.append(
+                asyncio.create_task(
+                    agent.act_polling(
+                        hour=18,
+                        day=self.day,
+                        candidates=self._get_candidates_names(),
+                        polling_numbers=self._get_most_recent_polling(),
+                        current_feed=self.platform.get_feed_as_string(limit=10),
+                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                        final_poll=True,
+                    )
+                )
+            )
+
+        votes = await asyncio.gather(*tasks)
+
+        for agent, vote in zip(self.people_agents + self.candidate_agents, votes):
+            action = get_closest_response(
+                testing_text=vote["action"],
+                responses=["VOTE", "ABSTAIN"],
+            )
+
+            if action == "VOTE":
+                if not vote.get("candidate"):
+                    logger.warning(
+                        f"{agent.name}'s FINAL VOTE did NOT specify a candidate. Defaulting to abstain."
+                    )
+                    agent.add_journal_entry(
+                        "Final vote without specifying a candidate."
+                    )
+                    continue
+
+                candidate = get_closest_response(
+                    testing_text=vote["candidate"],
+                    responses=self._get_candidates_names_list() + ["ABSTAIN"],
+                )
+
+                results[candidate] += 1
+
+                who_voted_for_who[agent.name] = candidate
+
+                agent.add_journal_entry(f"Voted for {vote['candidate']}")
+            elif action == "ABSTAIN":
+                results["ABSTAIN"] += 1
+
+                who_voted_for_who[agent.name] = "ABSTAIN"
+
+                logger.warning(f"{agent.name}'s FINAL VOTE abstained from voting.")
+
+                agent.add_journal_entry(f"Abstained from final voting")
+            else:
+                logger.error(
+                    f"Unexpected action {vote['action']} from {agent.name} during final polling."
+                )
+                agent.add_journal_entry(f"Unexpected action: {vote['action']}")
+
+        logger.info(f"Polling results Day {self.day}: {results}")
+
+        self.polling_history.append(results.copy())
+
+        self.who_voted_for_who_history.append(who_voted_for_who.copy())
+
+        return results
+
+    async def run_day(self):
         """
         Simulates a day in the election simulation.
         Each agent has a % chance to interact with the platform.
@@ -165,35 +269,40 @@ class ElecTwit:
         self.day += 1
 
         for hour in range(9, 18):
-            combined = self.people_agents + self.candidate_agents
-            random.shuffle(combined)
-
+            logger.info(f"Starting hour {hour} of day {self.day}.")
             # create events
             if self.eventer_agent.chance_to_act > random_number(0, 1):
-                self.eventer_agent.create_event(
+                await self.eventer_agent.create_event(
                     day=self.day,
                     hour=hour,
                     recent_poll=self._get_most_recent_polling(),
-                    feed=self.platform.get_feed_as_string(limit=10),
                     event_limit=10,
                 )
 
-            for agent in combined:
-                if random_number(0, 1) < agent.chance_to_act:
-                    agent.act_posting(
-                        hour=hour,
-                        day=self.day,
-                        candidates=self._get_candidates_names(),
-                        polling_numbers=self._get_most_recent_polling(),
-                        current_feed=self.platform.get_feed_as_string(limit=10),
-                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
-                    )
+            combined = self.people_agents + self.candidate_agents
+            random.shuffle(combined)
 
-                    actions = agent.get_todays_actions()
+            async def process_agent(agent):
+                await agent.act_posting(
+                    hour=hour,
+                    day=self.day,
+                    candidates=self._get_candidates_names(),
+                    polling_numbers=self._get_most_recent_polling(),
+                    current_feed=self.platform.get_feed_as_string(limit=10),
+                    recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                )
+                actions = agent.get_todays_actions()
+                self.platform.apply_actions(agent.name, self.day, hour, actions)
 
-                    self.platform.apply_actions(agent.name, self.day, hour, actions)
+            tasks = [
+                asyncio.create_task(process_agent(agent))
+                for agent in combined
+                if random_number(0, 1) < agent.chance_to_act
+            ]
+            if tasks:
+                await asyncio.gather(*tasks)
 
-    def end_day(self):
+    async def end_day(self):
         """
         Ends the day in the simulation.
 
@@ -202,23 +311,15 @@ class ElecTwit:
         - Runs polling
         """
 
-        self.run_polling()
+        await self.run_polling()
 
-        for agent in self.people_agents + self.candidate_agents:
-            agent.consolidate_diary(self.day)
+        tasks = [
+            asyncio.create_task(agent.consolidate_diary(self.day))
+            for agent in self.people_agents + self.candidate_agents
+        ]
+        await asyncio.gather(*tasks)
 
-        self.eventer_agent.consolidate_diary(self.day)
-
-    def final_polling(self) -> dict[str, int]:
-        """
-        Returns the final polling results as a dictionary.
-        """
-
-        if not self.polling_history:
-            return {"No polling history available.": 0}
-
-        latest_poll = self.polling_history[-1]
-        return latest_poll
+        await self.eventer_agent.consolidate_diary(self.day)
 
     def _get_candidates_names_list(self) -> List[str]:
         return [candidate.name for candidate in self.candidate_agents]
@@ -245,31 +346,32 @@ class ElecTwit:
             ]
         )
 
-    def run_simulation(self, days: int = 7):
+    async def run_simulation(self, days: int = 7):
         """Runs the entire simulation for a specified number of days."""
 
         try:
-            self.run_polling()
+            await self.run_polling()
             for _ in range(days):
                 logger.info(f"Starting day {self.day + 1} of the simulation.")
-                self.run_day()
-                self.end_day()
+                await self.run_day()
+                await self.end_day()
 
-            logger.info("Final Polling Results:")
-            for candidate in self.candidate_agents:
-                votes = sum(
-                    poll.get(candidate.name, 0) for poll in self.polling_history
-                )
-            logger.info(f"{candidate.name}: {votes} votes")
+            results = await self.final_polling()
+
+            logger.info("Final polling results:")
+            for candidate, votes in results.items():
+                logger.info(f"{candidate}: {votes} votes")
         except Exception as e:
             logger.exception(f"An error occurred during the simulation: {e}")
             raise
         finally:
             logger.info("Simulation completed. Saving results...")
 
+            self._export_to_json()
+
             # log the platform state and agent states and polling
 
-            with open("simulation_results.txt", "w") as f:
+            with open(get_log_dir() / "simulation_results.txt", "w") as f:
                 f.write("--- Platform State: ---\n")
                 f.write(str(self.platform))
                 f.write("\n\n---Polling History:---\n")
@@ -315,3 +417,28 @@ class ElecTwit:
         logger.info("Candidates in the simulation:")
         for agent in self.candidate_agents:
             logger.info(f"Candidate: {agent.name}, Political View: {agent.background}")
+
+    def _export_to_json(self, checkpoint: int = None) -> dict:
+        """
+        Saves the current state of the simulation to a checkpoint json file.
+        """
+
+        file = "checkpoint.json"
+        if checkpoint is not None:
+            file = f"checkpoint_{checkpoint}.json"
+
+        with open(get_log_dir() / file, "w") as f:
+            checkpoint_data = {
+                "day": self.day,
+                "polling_history": self.polling_history,
+                "who_voted_for_who_history": self.who_voted_for_who_history,
+                "people_agents": [
+                    agent._export_to_json() for agent in self.people_agents
+                ],
+                "candidate_agents": [
+                    agent._export_to_json() for agent in self.candidate_agents
+                ],
+                "eventer_agent": self.eventer_agent._export_to_json(),
+                "platform": self.platform._export_to_json(),
+            }
+            f.write(json.dumps(checkpoint_data, indent=4))

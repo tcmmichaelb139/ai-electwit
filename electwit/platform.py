@@ -18,7 +18,9 @@ class Comment:
     Each comment can have replies and likes.
     """
 
-    def __init__(self, id: str, name: str, day: int, hour: int, content: str):
+    def __init__(
+        self, id: str, name: str, day: int, hour: int, content: str, depth: int = 0
+    ):
         self.id = id
         self.name = name
         self.day = day
@@ -28,10 +30,27 @@ class Comment:
             self.content += "..."
         self.replies: List[Comment] = []
         self.likes = 0
+        self.depth = depth
 
     def add_comment(self, comment: "Comment") -> None:
         """Adds a reply to the comment."""
+        comment.depth = self.depth + 1
+
         self.replies.append(comment)
+
+    def _export_to_json(self) -> dict:
+        """
+        Exports the comment to a JSON-compatible dictionary.
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "day": self.day,
+            "hour": self.hour,
+            "content": self.content,
+            "replies": [reply._export_to_json() for reply in self.replies],
+            "likes": self.likes,
+        }
 
 
 class Post:
@@ -55,6 +74,20 @@ class Post:
         """Adds a comment to the post."""
         self.replies.append(comment)
 
+    def _export_to_json(self) -> dict:
+        """
+        Exports the post to a JSON-compatible dictionary.
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "day": self.day,
+            "hour": self.hour,
+            "content": self.content,
+            "replies": [reply._export_to_json() for reply in self.replies],
+            "likes": self.likes,
+        }
+
 
 class Platform:
     """
@@ -76,9 +109,12 @@ class Platform:
                 testing_text=action["action"], responses=["POST", "REPLY", "LIKE"]
             )
             if action_action == "POST":
+                new_id = self._get_new_id(action)
+                if not new_id:
+                    continue
                 self.platform.append(
                     Post(
-                        id=self._get_new_id(action),
+                        id=new_id,
                         name=name,
                         day=day,
                         hour=hour,
@@ -87,9 +123,17 @@ class Platform:
                 )
             elif action_action == "REPLY":
                 replying_to = self._find_thing_by_id(action["id"])
+                if not replying_to:
+                    logger.warning(
+                        f"Could not find post/comment with id {action['id']} to reply to. Action skipped."
+                    )
+                    continue
+                new_id = self._get_new_id(action)
+                if not new_id:
+                    continue
                 replying_to.add_comment(
                     Comment(
-                        id=self._get_new_id(action),
+                        id=new_id,
                         name=name,
                         day=day,
                         hour=hour,
@@ -98,22 +142,32 @@ class Platform:
                 )
             elif action_action == "LIKE":
                 liking = self._find_thing_by_id(action["id"])
+                if not liking:
+                    logger.warning(
+                        f"Could not find post/comment with id {action['id']} to like. Action skipped."
+                    )
+                    continue
                 liking.likes += 1
             else:
                 logger.error(f"Unknown action: {action['action']}. Action skipped.")
 
-    def _get_new_id(self, action: dict, additional: str = "") -> str:
+    def _get_new_id(self, action: dict, depth: int = 0) -> str:
         """
         Generates a new unique ID for a post.
         """
+        if depth > 5:
+            logger.error(
+                "Maximum recursion depth reached while generating a new ID. Returning empty string."
+            )
+            return ""
 
-        hashstr = str(action) + str(len(self.ids)) + additional
+        hashstr = str(action) + str(len(self.ids)) + str(depth)
 
         hashid = hashlib.sha1(hashstr.encode("utf-8")).hexdigest()[:10]
 
         if hashid in self.ids:
             logger.warning(f"ID {hashid} already exists. Generating a new one.")
-            return self._get_new_id(action, additional=hashid)
+            return self._get_new_id(action, depth=depth + 1)
 
         self.ids.append(hashid)
 
@@ -135,21 +189,19 @@ class Platform:
 
         return None
 
-    def _find_thing_by_id(self, id_: str) -> Post | Comment:
+    def _find_thing_by_id(self, id_: str) -> Post | Comment | None:
         """
         Finds both a post or a comment by its ID.
         """
 
-        id_ = get_closest_response(
-            testing_text=id_,
-            responses=self.ids,
-        )
+        if id_ not in self.ids:
+            return None
 
         result = self._recursive_find(id_, self.platform)
 
         return result
 
-    def get_feed(self, limit: int = 10) -> List[Post]:
+    def get_feed(self, limit: int = 10, rand: bool = True) -> List[Post]:
         """
         Returns the most recent posts from the platform.
 
@@ -158,7 +210,9 @@ class Platform:
         """
 
         feed = self.platform[-limit:].copy()
-        random.shuffle(feed)
+
+        if rand:
+            random.shuffle(feed)
 
         return feed
 
@@ -171,18 +225,19 @@ class Platform:
         - indent (str): The indentation string for nested replies.
         """
         result = f"{indent}Reply from {comment.name} (ID: {comment.id}) (Day: {comment.day} Hour: {comment.hour}): {comment.content}\n(Likes: {comment.likes})\n"
-        for reply in comment.replies:
-            result += self._comment_thread_string(reply, indent + "  ")
+        if comment.depth <= 3:  # Limit depth to 3 for readability
+            for reply in comment.replies:
+                result += self._comment_thread_string(reply, indent + "  ")
         return result
 
-    def get_feed_as_string(self, limit: int = 10) -> str:
+    def get_feed_as_string(self, limit: int = 10, rand: bool = True) -> str:
         """
         Returns the most recent posts as a formatted string.
 
         Args:
         - limit (int): The maximum number of posts to return.
         """
-        feed = self.get_feed(limit)
+        feed = self.get_feed(limit, rand)
 
         result = ""
 
@@ -202,5 +257,15 @@ class Platform:
         """
 
         return (
-            self.get_feed_as_string(limit=len(self.platform)) or "No posts available."
+            self.get_feed_as_string(limit=len(self.platform), rand=False)
+            or "No posts available."
         )
+
+    def _export_to_json(self) -> dict:
+        """
+        Exports the platform to a JSON-compatible dictionary.
+        """
+        return {
+            "platform": [post._export_to_json() for post in self.platform],
+            "ids": self.ids,
+        }

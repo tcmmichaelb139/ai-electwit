@@ -52,7 +52,9 @@ def load_prompt(filename: str, prompt_dir: Optional[str] = None) -> str:
 
 
 def create_background_prompt(
+    name: str,
     age: int,
+    gender: str,
     race: str,
     family_status: str,
     household_income: int,
@@ -76,7 +78,9 @@ def create_background_prompt(
     )
 
     background_prompt = background_prompt.format(
+        name=name,
         age=age,
+        gender=gender,
         race=race,
         family_status=family_status,
         household_income=household_income,
@@ -100,6 +104,14 @@ def create_random_background() -> dict:
     Creates a random background prompt using Faker and predefined categories.
     """
 
+    gender = random.choice(["male", "female", "non-binary"])
+    name = ""
+    if gender == "male":
+        name = fake.unique.name_male()
+    elif gender == "female":
+        name = fake.unique.name_female()
+    else:
+        name = fake.unique.name_nonbinary()
     age = random.randint(18, 75)
     race = random.choice(
         [
@@ -171,7 +183,9 @@ def create_random_background() -> dict:
     authority_stance = random.randint(0, 100)
     environmental_priorities_stance = random.randint(0, 100)
     return {
+        "name": name,
         "age": age,
+        "gender": gender,
         "race": race,
         "family_status": family_status,
         "household_income": household_income,
@@ -197,7 +211,9 @@ def apply_background_prompt(background: dict) -> str:
         return ""
 
     return create_background_prompt(
+        name=background["name"],
         age=background["age"],
+        gender=background["gender"],
         race=background["race"],
         family_status=background["family_status"],
         household_income=background["household_income"],
@@ -212,13 +228,6 @@ def apply_background_prompt(background: dict) -> str:
         authority_stance=background["authority_stance"],
         environmental_priorities_stance=background["environmental_priorities_stance"],
     )
-
-
-def random_new_name() -> str:
-    """
-    Generates a new random name using Faker.
-    """
-    return fake.unique.first_name()
 
 
 def random_number(a: float, b: float) -> float:

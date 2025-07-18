@@ -1,4 +1,5 @@
 import logging
+import pytest
 
 from electwit.agents import ElectionAgent
 from electwit.clients import OpenRouterClient
@@ -8,7 +9,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def test_agent_diary_consolidation():
+@pytest.mark.asyncio
+async def test_agent_diary_consolidation():
     """
     Test the agent's diary consolidation functionality.
     """
@@ -37,7 +39,7 @@ def test_agent_diary_consolidation():
     for entry in diary:
         agent.add_today_diary_entry(entry)
 
-    agent.consolidate_diary()
+    await agent.consolidate_diary()
 
     logger.debug(f"Consolidated Diary: {agent.consolidated_diary}")
     assert len(agent.consolidated_diary) > 0, "Consolidated diary should not be empty."

@@ -5,7 +5,7 @@ import re
 from typing import Optional, List
 
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 from google import genai
 from google.genai import types
 import json_repair
@@ -47,18 +47,18 @@ class BaseModelClient:
 
         self.system_prompt = system_prompt
 
-    def generate_response(self, prompt: str) -> str:
+    async def generate_response(self, prompt: str) -> str:
         """
         Returns the raw response generated from the LLM
         Subclasses override this
         """
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    def generate_response_json_list(self, prompt: str) -> Optional[List[dict]]:
+    async def generate_response_json_list(self, prompt: str) -> Optional[List[dict]]:
         """
         Returns the response in JSON format
         """
-        response = self.generate_response(prompt)
+        response = await self.generate_response(prompt)
 
         response = response.strip()
 
@@ -102,18 +102,18 @@ class OpenRouterClient(BaseModelClient):
             raise ValueError("OPENROUTER_API_KEY environment variable is not set.")
 
         self.model_name = model_name
-        self.client = OpenAI(
+        self.client = AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=self.api_key,
         )
 
-    def generate_response(self, prompt: str, temperature: float = 0.0) -> str:
+    async def generate_response(self, prompt: str, temperature: float = 0.0) -> str:
         """
         Generates a response from the OpenRouter API using the specified model.
         """
 
         try:
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
@@ -143,56 +143,6 @@ class OpenRouterClient(BaseModelClient):
             raise e
 
 
-class GeminiClient(BaseModelClient):
-    """
-    Client interface for Google Gemini API
-    """
-
-    def __init__(
-        self,
-        model_name: str = "gemini-1.5-flash",
-        prompt_dir: Optional[str] = None,
-    ):
-        super().__init__(model_name, prompt_dir)
-
-        self.api_key = os.getenv("GEMINI_API_KEY")
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY environment variable is not set.")
-
-        self.client = genai.Client(api_key=self.api_key)
-
-    def generate_response(self, prompt: str, temperature: float = 0.0) -> str:
-        """
-        Generates a response from the Gemini API using the specified model.
-        """
-
-        try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=self.system_prompt,
-                    temperature=temperature,
-                    max_output_tokens=self.max_tokens,
-                    thinking_config=types.ThinkingConfig(
-                        thinking_budget=512,
-                    ),
-                ),
-            )
-
-            if not response.text:
-                logger.warning(
-                    f"[{self.model_name}] Empty content returned in response."
-                )
-                return ""
-
-            return response.text.strip()
-
-        except Exception as e:
-            logger.error(f"Error generating response: {e}")
-            raise e
-
-
 def load_model_client(
     model_name: str, prompt_dir: Optional[str] = None
 ) -> BaseModelClient:
@@ -207,9 +157,10 @@ def load_model_client(
         or "llama" in model_name
         or "openai" in model_name
         or "grok" in model_name
+        or "gemini" in model_name
+        or "qwen" in model_name
+        or "claude" in model_name
     ):
         return OpenRouterClient(model_name=model_name, prompt_dir=prompt_dir)
-    elif "gemini" in model_name:
-        return GeminiClient(model_name=model_name, prompt_dir=prompt_dir)
 
     raise ValueError(f"Unsupported model type: {model_name}.")

@@ -8,16 +8,12 @@ You will be given:
 - Your recent private diary entries (for inner thoughts and reasoning).
 - The current poll numbers from the previous day.
 - Your current feed of posts and replies. 
-- The most recent events that have occured in the simulation.
+- The most recent events that have occured in the simulation (this is your source of information about the simulation).
 - A list of possible actions you can take.
 
 There are two phases during each day: 
 1. **Posting and Discussion Phase**: You can post new content or reply to existing posts. You can also like posts from others. 
 2. **Polling Phase**: You will vote in a poll about the candidate you support.
 
-ROLE
-Your role as a candidate is to bring to light your policies, why they are better than others, and gain more supporters. Every action you make is to be calculated. Do NOT make unnecessary posts or comments. You want to post more than reply
-
-According to the guidelines of the platform, all messages MUST BE SHORTER than 280 characters (not including JSON).
-
-DO NOT REPEAT MESSAGES
+Final Poll:
+At the end of the entire simulation, you will be allowed to conduct a final poll to determine the winner of the election. You are not allowed to abstain.

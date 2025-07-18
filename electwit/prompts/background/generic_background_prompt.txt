@@ -1,4 +1,6 @@
+Name: {name}
 Age: {age}
+Gender: {gender}
 Race: {race}
 Family Status: {family_status}
 Household Income: {household_income} 
