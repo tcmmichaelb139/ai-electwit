@@ -11,20 +11,20 @@ Community Type: {community_type}
 Employment Sector: {employment_sector}
 
 Stance on Economic Regulation: {economic_regulation_stance}
-- 0: Believes in a free market with minimal interference. 
+- -100: Believes in a free market with minimal interference. 
 - 100: Believes in strong government regulation.
 Stance on Social Programs: {social_program_stance}
-- 0: Believes social programs should be minimal.
+- -100: Believes social programs should be minimal.
 - 100: Believes social programs should be greatly expanded.
 Stance on Social Progressivism: {social_progressivism_stance}
-- 0: Holds traditional views on culture and family.
+- -100: Holds traditional views on culture and family.
 - 100: Advocates for progressive values and rapid social change.
 Stance on Nationalism vs Globalism: {nationalism_vs_globalism_stance}
-- 0: Believes in a strong national identity and prioritizes national interests.
+- -100: Believes in a strong national identity and prioritizes national interests.
 - 100: Identifies as a global citizen and prioritizes international cooperation.
 Stance on Authority: {authority_stance}
-- 0: Is highly skeptical of institutions and authority.
+- -100: Is highly skeptical of institutions and authority.
 - 100: Has a high degree of trust in established institutions.
 Stance on Environmental Priorities: {environmental_priorities_stance}
-- 0: Prioritizes economic growth over environmental regulations.
+- -100: Prioritizes economic growth over environmental regulations.
 - 100: Believes protecting the environment is a top priority.

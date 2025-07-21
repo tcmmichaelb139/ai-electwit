@@ -112,6 +112,9 @@ class Platform:
                 new_id = self._get_new_id(action)
                 if not new_id:
                     continue
+                logger.debug(
+                    f"Creating new post with ID {new_id} by {name} on day {day} at hour {hour}."
+                )
                 self.platform.append(
                     Post(
                         id=new_id,
@@ -131,6 +134,9 @@ class Platform:
                 new_id = self._get_new_id(action)
                 if not new_id:
                     continue
+                logger.debug(
+                    f"Creating new comment with ID {new_id} by {name} on day {day} at hour {hour}."
+                )
                 replying_to.add_comment(
                     Comment(
                         id=new_id,
@@ -147,6 +153,7 @@ class Platform:
                         f"Could not find post/comment with id {action['id']} to like. Action skipped."
                     )
                     continue
+                logger.debug(f"{name} liked {liking.id} on day {day} at hour {hour}.")
                 liking.likes += 1
             else:
                 logger.error(f"Unknown action: {action['action']}. Action skipped.")
@@ -174,16 +181,21 @@ class Platform:
         return hashid
 
     def _recursive_find(
-        self, id: str, items: List[Post | Comment]
+        self, id_: str, items: List[Post | Comment], depth: int = 0
     ) -> Post | Comment | None:
         """
         Recursively finds a post or comment by its ID.
         """
+        if depth > 50:  # Safety limit to prevent runaway recursion
+            logger.error(
+                f"Maximum recursion depth reached while searching for ID {id_}"
+            )
+            return None
 
         for item in items:
-            if item.id == id:
+            if item.id == id_:
                 return item
-            found = self._recursive_find(id, item.replies)
+            found = self._recursive_find(id_, item.replies, depth + 1)
             if found:
                 return found
 
@@ -198,6 +210,8 @@ class Platform:
             return None
 
         result = self._recursive_find(id_, self.platform)
+
+        logger.debug(f"Found item with ID {id_}: {result}")
 
         return result
 

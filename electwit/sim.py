@@ -16,6 +16,7 @@ from electwit.utils import (
     create_random_background,
     random_number,
     get_closest_response,
+    calculate_cosine_similarity,
 )
 
 SEED = os.getenv("SEED") or 42
@@ -28,9 +29,12 @@ random.seed(SEED)
 class ElecTwit:
     def __init__(
         self,
-        people_models: str = "openrouter/cypher-alpha:free;10",
+        voter_models: str = "openrouter/cypher-alpha:free;10",
         candidate_models: str = "openrouter/cypher-alpha:free;2",
         eventer_model: str = "openrouter/cypher-alpha:free",
+        candidate_similarity: List[float] = [-1.0, -0.75],
+        limits: int = 10,
+        memory_limit: int = 5,
     ):
         """
         Initialize the ElecTwit simulation.
@@ -39,21 +43,29 @@ class ElecTwit:
         people_models (str): Model names for the people, formatted as "model_name;count,model_name;count,".
         num_candidates (int): Number of candidates in the election.
         candidate_models (str): Model names for the candidates, formatted as "model_name;count,model_name;count,".
+        eventer_model (str): Model name for the eventer agent.
+        limits (int): Number of posts to keep in the platform's feed.
+        memory_limit (int): Number of days consolidation diaries are kept
         """
 
-        self.people_models = people_models.split(",")
+        self.limits = limits
+        self.memory_limit = memory_limit
+
+        self.voter_models = voter_models.split(",")
         self.candidate_models = candidate_models.split(",")
 
-        self.people_agents = self.initialize_agents(self.people_models, "voter")
-        self.candidate_agents = self.initialize_agents(
-            self.candidate_models, "candidate", different=True
+        self.voter_agents = self.initialize_voters(self.voter_models)
+        self.candidate_agents = self.initialize_candidates(
+            self.candidate_models, similarity=candidate_similarity
         )
+        self.candidate_similarity = candidate_similarity
         self.eventer_agent = EventorAgent(
             name="Eventer",
             client=load_model_client(eventer_model, "electwit/prompts/eventer"),
             role="eventer",
             chance_to_act=random_number(0.3, 0.7),
             prompt_dir=os.path.join("electwit", "prompts"),
+            limit=memory_limit,
         )
         self.eventer_agent.client.set_system_prompt(
             load_prompt("system_prompt_eventer.txt", "electwit/prompts/eventer")
@@ -67,9 +79,67 @@ class ElecTwit:
         self.who_voted_for_who_history = []
         self.platform = Platform()
 
-    def initialize_agents(
-        self, models: List[str], role: str, different: Optional[bool] = False
+    def initialize_candidates(
+        self, models: List[str], similarity: Optional[List[float]] = None
     ) -> list[ElectionAgent]:
+        """
+        Initialize agents for the given models.
+        """
+
+        while True:
+            agents = []
+            for model in models:
+                model_name, count = model.split(";")
+
+                if not model_name or not count.isdigit():
+                    raise ValueError(
+                        f"Invalid model format: {model}. Expected 'model_name;count'."
+                    )
+
+                count = int(count)
+                for _ in range(count):
+                    client = load_model_client(
+                        model_name, f"electwit/prompts/candidate"
+                    )
+
+                    client.set_system_prompt(
+                        load_prompt(
+                            f"system_prompt_candidate.txt",
+                            f"electwit/prompts/candidate",
+                        )
+                    )
+
+                    background = create_random_background()
+
+                    agents.append(
+                        ElectionAgent(
+                            name=background["name"],
+                            client=client,
+                            role="candidate",
+                            background=background,
+                            chance_to_act=random_number(0.4, 0.9),
+                            prompt_dir=os.path.join("electwit", "prompts"),
+                            limit=self.memory_limit,
+                        )
+                    )
+
+            if similarity is None:
+                break
+
+            # Check for similarity between candidates
+            for i in range(len(agents) - 1):
+                sim = calculate_cosine_similarity(
+                    agents[i].background, agents[i + 1].background
+                )
+
+                logger.info(sim)
+
+                if similarity[0] < sim and sim < similarity[1]:
+                    return agents
+
+        return agents
+
+    def initialize_voters(self, models: List[str]) -> list[ElectionAgent]:
         """
         Initialize agents for the given models.
         """
@@ -85,25 +155,23 @@ class ElecTwit:
 
             count = int(count)
             for _ in range(count):
-                client = load_model_client(model_name, f"electwit/prompts/{role}")
+                client = load_model_client(model_name, "electwit/prompts/voter")
 
                 client.set_system_prompt(
-                    load_prompt(f"system_prompt_{role}.txt", f"electwit/prompts/{role}")
+                    load_prompt("system_prompt_voter.txt", "electwit/prompts/voter")
                 )
 
                 background = create_random_background()
-
-                if different:
-                    pass
 
                 agents.append(
                     ElectionAgent(
                         name=background["name"],
                         client=client,
-                        role=role,
+                        role="voter",
                         background=background,
                         chance_to_act=random_number(0.4, 0.9),
                         prompt_dir=os.path.join("electwit", "prompts"),
+                        limit=self.memory_limit,
                     )
                 )
 
@@ -124,7 +192,7 @@ class ElecTwit:
             results[candidate.name] = 0
 
         tasks = []
-        for agent in self.people_agents + self.candidate_agents:
+        for agent in self.voter_agents + self.candidate_agents:
             tasks.append(
                 asyncio.create_task(
                     agent.act_polling(
@@ -132,8 +200,12 @@ class ElecTwit:
                         day=self.day,
                         candidates=self._get_candidates_names(),
                         polling_numbers=self._get_most_recent_polling(),
-                        current_feed=self.platform.get_feed_as_string(limit=10),
-                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                        current_feed=self.platform.get_feed_as_string(
+                            limit=self.limits
+                        ),
+                        recent_events=self.eventer_agent.get_formatted_events(
+                            limit=self.limits
+                        ),
                         final_poll=False,
                     )
                 )
@@ -141,7 +213,7 @@ class ElecTwit:
 
         votes = await asyncio.gather(*tasks)
 
-        for agent, vote in zip(self.people_agents + self.candidate_agents, votes):
+        for agent, vote in zip(self.voter_agents + self.candidate_agents, votes):
             action = get_closest_response(
                 testing_text=vote["action"],
                 responses=["VOTE", "ABSTAIN"],
@@ -195,7 +267,7 @@ class ElecTwit:
             results[candidate.name] = 0
 
         tasks = []
-        for agent in self.people_agents + self.candidate_agents:
+        for agent in self.voter_agents + self.candidate_agents:
             tasks.append(
                 asyncio.create_task(
                     agent.act_polling(
@@ -203,8 +275,12 @@ class ElecTwit:
                         day=self.day,
                         candidates=self._get_candidates_names(),
                         polling_numbers=self._get_most_recent_polling(),
-                        current_feed=self.platform.get_feed_as_string(limit=10),
-                        recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                        current_feed=self.platform.get_feed_as_string(
+                            limit=self.limits
+                        ),
+                        recent_events=self.eventer_agent.get_formatted_events(
+                            limit=self.limits
+                        ),
                         final_poll=True,
                     )
                 )
@@ -212,7 +288,7 @@ class ElecTwit:
 
         votes = await asyncio.gather(*tasks)
 
-        for agent, vote in zip(self.people_agents + self.candidate_agents, votes):
+        for agent, vote in zip(self.voter_agents + self.candidate_agents, votes):
             action = get_closest_response(
                 testing_text=vote["action"],
                 responses=["VOTE", "ABSTAIN"],
@@ -276,10 +352,10 @@ class ElecTwit:
                     day=self.day,
                     hour=hour,
                     recent_poll=self._get_most_recent_polling(),
-                    event_limit=10,
+                    event_limit=self.limits,
                 )
 
-            combined = self.people_agents + self.candidate_agents
+            combined = self.voter_agents + self.candidate_agents
             random.shuffle(combined)
 
             async def process_agent(agent):
@@ -288,8 +364,10 @@ class ElecTwit:
                     day=self.day,
                     candidates=self._get_candidates_names(),
                     polling_numbers=self._get_most_recent_polling(),
-                    current_feed=self.platform.get_feed_as_string(limit=10),
-                    recent_events=self.eventer_agent.get_formatted_events(limit=10),
+                    current_feed=self.platform.get_feed_as_string(limit=self.limits),
+                    recent_events=self.eventer_agent.get_formatted_events(
+                        limit=self.limits
+                    ),
                 )
                 actions = agent.get_todays_actions()
                 self.platform.apply_actions(agent.name, self.day, hour, actions)
@@ -315,7 +393,7 @@ class ElecTwit:
 
         tasks = [
             asyncio.create_task(agent.consolidate_diary(self.day))
-            for agent in self.people_agents + self.candidate_agents
+            for agent in self.voter_agents + self.candidate_agents
         ]
         await asyncio.gather(*tasks)
 
@@ -386,10 +464,10 @@ class ElecTwit:
                 )
 
                 f.write("\n\n--- People Agents: ---\n")
-                for agent in self.people_agents:
+                for agent in self.voter_agents:
                     f.write(
                         str(agent) + "\n"
-                        f"Consolidated Diary: {agent.formatted_consolidated_diary()}\n"
+                        f"Consolidated Diary: {agent.formatted_consolidated_diary(limit=0)}\n"
                         f"Today's Diary: {agent.formatted_today_diary()}\n"
                     )
 
@@ -397,20 +475,20 @@ class ElecTwit:
                 for agent in self.candidate_agents:
                     f.write(
                         str(agent) + "\n"
-                        f"Consolidated Diary: {agent.formatted_consolidated_diary()}\n"
+                        f"Consolidated Diary: {agent.formatted_consolidated_diary(limit=0)}\n"
                         f"Today's Diary: {agent.formatted_today_diary()}\n"
                     )
 
                 f.write("\n\n--- Eventer Agent: ---\n")
                 f.write(
                     str(self.eventer_agent) + "\n"
-                    f"Consolidated Diary: {self.eventer_agent.formatted_consolidated_diary()}\n"
+                    f"Consolidated Diary: {self.eventer_agent.formatted_consolidated_diary(limit=0)}\n"
                     f"Today's Diary: {self.eventer_agent.formatted_today_diary()}\n"
                 )
 
     def _log_people(self):
         logger.info("People in the simulation:")
-        for agent in self.people_agents:
+        for agent in self.voter_agents:
             logger.info(f"Person: {agent.name}, Political View: {agent.background}")
 
     def _log_candidates(self):
@@ -433,12 +511,15 @@ class ElecTwit:
                 "polling_history": self.polling_history,
                 "who_voted_for_who_history": self.who_voted_for_who_history,
                 "people_agents": [
-                    agent._export_to_json() for agent in self.people_agents
+                    agent._export_to_json() for agent in self.voter_agents
                 ],
                 "candidate_agents": [
                     agent._export_to_json() for agent in self.candidate_agents
                 ],
                 "eventer_agent": self.eventer_agent._export_to_json(),
                 "platform": self.platform._export_to_json(),
+                "limits": self.limits,
+                "memory_limit": self.memory_limit,
+                "candidate_similarity": self.candidate_similarity,
             }
             f.write(json.dumps(checkpoint_data, indent=4))

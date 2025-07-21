@@ -6,8 +6,6 @@ from typing import Optional, List
 
 
 from openai import AsyncOpenAI
-from google import genai
-from google.genai import types
 import json_repair
 
 
@@ -33,7 +31,7 @@ class BaseModelClient:
     def __init__(self, model_name: str, prompt_dir: Optional[str] = None):
         self.model_name = model_name
         self.client = None
-        self.max_tokens = 5000
+        self.max_tokens = 16384
         self.prompt_dir = prompt_dir
         self.system_prompt = load_prompt("system_prompt.txt", self.prompt_dir)
 
@@ -127,6 +125,8 @@ class OpenRouterClient(BaseModelClient):
                 logger.warning(f"[{self.model_name}] No choices returned in response.")
                 return ""
 
+            logger.debug(f"[{self.model_name}] Response: {response}")
+
             content = response.choices[0].message.content.strip()
 
             if not content:
@@ -160,6 +160,7 @@ def load_model_client(
         or "gemini" in model_name
         or "qwen" in model_name
         or "claude" in model_name
+        or "moonshotai" in model_name
     ):
         return OpenRouterClient(model_name=model_name, prompt_dir=prompt_dir)
 

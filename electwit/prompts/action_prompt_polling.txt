@@ -27,12 +27,24 @@ Required JSON format for ABSTAIN:
     }
 ]
 
-EXAMPLE
+EXAMPLES
 [
     {
         "action": "VOTE",
         "candidate": "John Doe"
     }
 ]
+
+Reasoning:
+- Voted for John Doe.
+
+[
+    {
+        "action": "ABSTAIN"
+    }
+]
+
+Reasoning:
+- Chose not to vote.
 
 Do not include any text outside the JSON.

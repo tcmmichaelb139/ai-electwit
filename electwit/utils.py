@@ -3,6 +3,7 @@ import logging
 import random
 from faker import Faker
 from thefuzz import process  # uses Levenshtein Distance
+import numpy as np
 
 from typing import Optional
 
@@ -53,47 +54,39 @@ def load_prompt(filename: str, prompt_dir: Optional[str] = None) -> str:
 
 def create_background_prompt(
     name: str,
-    age: int,
-    gender: str,
-    race: str,
-    family_status: str,
-    household_income: int,
-    religious_stance: str,
-    education_level: str,
-    community_type: str,
-    employment_sector: str,
-    economic_regulation_stance: int,
-    social_program_stance: int,
-    social_progressivism_stance: int,
-    nationalism_vs_globalism_stance: int,
-    authority_stance: int,
-    environmental_priorities_stance: int,
+    economic_policy: int,
+    social_authority: int,
+    governmental_power: int,
+    foreign_policy: int,
+    environmental_approach: int,
+    national_identity: int,
+    openness: int,
+    conscientiousness: int,
+    extraversion: int,
+    agreeableness: int,
+    emotional_stability: int,
 ) -> str:
     """
     Creates a background prompt based on the user info
     """
 
     background_prompt = load_prompt(
-        "generic_background_prompt.txt", "electwit/prompts/background"
+        "stances_background_prompt.txt", "electwit/prompts/background"
     )
 
     background_prompt = background_prompt.format(
         name=name,
-        age=age,
-        gender=gender,
-        race=race,
-        family_status=family_status,
-        household_income=household_income,
-        religious_stance=religious_stance,
-        education_level=education_level,
-        community_type=community_type,
-        employment_sector=employment_sector,
-        economic_regulation_stance=economic_regulation_stance,
-        social_program_stance=social_program_stance,
-        social_progressivism_stance=social_progressivism_stance,
-        nationalism_vs_globalism_stance=nationalism_vs_globalism_stance,
-        authority_stance=authority_stance,
-        environmental_priorities_stance=environmental_priorities_stance,
+        economic_policy=economic_policy,
+        social_authority=social_authority,
+        governmental_power=governmental_power,
+        foreign_policy=foreign_policy,
+        environmental_approach=environmental_approach,
+        national_identity=national_identity,
+        openness=openness,
+        conscientiousness=conscientiousness,
+        extraversion=extraversion,
+        agreeableness=agreeableness,
+        emotional_stability=emotional_stability,
     )
 
     return background_prompt
@@ -101,104 +94,34 @@ def create_background_prompt(
 
 def create_random_background() -> dict:
     """
-    Creates a random background prompt using Faker and predefined categories.
+    Creates a random background prompt using predefined stance categories.
     """
 
-    gender = random.choice(["male", "female", "non-binary"])
-    name = ""
-    if gender == "male":
-        name = fake.unique.name_male()
-    elif gender == "female":
-        name = fake.unique.name_female()
-    else:
-        name = fake.unique.name_nonbinary()
-    age = random.randint(18, 75)
-    race = random.choice(
-        [
-            "White",
-            "Black or African American",
-            "Asian",
-            "Hispanic or Latino",
-            "Native American",
-            "Pacific Islander",
-        ]
-    )
-    family_status = random.choice(
-        [
-            "Single",
-            "Married",
-            "Divorced",
-            "Widowed",
-            "Cohabitating",
-        ]
-    )
-    household_income = random.randint(20000, 200000)
-    religious_stance = random.choice(
-        [
-            "Atheist",
-            "Agnostic",
-            "Spiritual but not religious",
-            "Casually religious",
-            "Devoutly religious",
-        ]
-    )
-    education_level = random.choice(
-        [
-            "High School",
-            "Trade School",
-            "Community College",
-            "Bachelor's Degree",
-            "Master's Degree",
-            "Doctorate",
-        ]
-    )
-    community_type = random.choice(
-        [
-            "Urban",
-            "Suburban",
-            "Rural",
-            "Small Town",
-            "Metropolitan Area",
-            "Tech Hub",
-        ]
-    )
-    employment_sector = random.choice(
-        [
-            "Not Employed",
-            "Manufacturing",
-            "Service Industry",
-            "Technology",
-            "Healthcare",
-            "Education",
-            "Finance",
-            "Government",
-            "Non-Profit",
-            "Business Owner",
-        ]
-    )
-    economic_regulation_stance = random.randint(0, 100)
-    social_program_stance = random.randint(0, 100)
-    social_progressivism_stance = random.randint(0, 100)
-    nationalism_vs_globalism_stance = random.randint(0, 100)
-    authority_stance = random.randint(0, 100)
-    environmental_priorities_stance = random.randint(0, 100)
+    name = fake.unique.name()
+    economic_policy = random.randint(-100, 100)
+    social_authority = random.randint(-100, 100)
+    governmental_power = random.randint(-100, 100)
+    foreign_policy = random.randint(-100, 100)
+    environmental_approach = random.randint(-100, 100)
+    national_identity = random.randint(-100, 100)
+    openness = random.randint(-100, 100)
+    conscientiousness = random.randint(-100, 100)
+    extraversion = random.randint(-100, 100)
+    agreeableness = random.randint(-100, 100)
+    emotional_stability = random.randint(-100, 100)
     return {
         "name": name,
-        "age": age,
-        "gender": gender,
-        "race": race,
-        "family_status": family_status,
-        "household_income": household_income,
-        "religious_stance": religious_stance,
-        "education_level": education_level,
-        "community_type": community_type,
-        "employment_sector": employment_sector,
-        "economic_regulation_stance": economic_regulation_stance,
-        "social_program_stance": social_program_stance,
-        "social_progressivism_stance": social_progressivism_stance,
-        "nationalism_vs_globalism_stance": nationalism_vs_globalism_stance,
-        "authority_stance": authority_stance,
-        "environmental_priorities_stance": environmental_priorities_stance,
+        "economic_policy": economic_policy,
+        "social_authority": social_authority,
+        "governmental_power": governmental_power,
+        "foreign_policy": foreign_policy,
+        "environmental_approach": environmental_approach,
+        "national_identity": national_identity,
+        "openness": openness,
+        "conscientiousness": conscientiousness,
+        "extraversion": extraversion,
+        "agreeableness": agreeableness,
+        "emotional_stability": emotional_stability,
     }
 
 
@@ -212,21 +135,17 @@ def apply_background_prompt(background: dict) -> str:
 
     return create_background_prompt(
         name=background["name"],
-        age=background["age"],
-        gender=background["gender"],
-        race=background["race"],
-        family_status=background["family_status"],
-        household_income=background["household_income"],
-        religious_stance=background["religious_stance"],
-        education_level=background["education_level"],
-        community_type=background["community_type"],
-        employment_sector=background["employment_sector"],
-        economic_regulation_stance=background["economic_regulation_stance"],
-        social_program_stance=background["social_program_stance"],
-        social_progressivism_stance=background["social_progressivism_stance"],
-        nationalism_vs_globalism_stance=background["nationalism_vs_globalism_stance"],
-        authority_stance=background["authority_stance"],
-        environmental_priorities_stance=background["environmental_priorities_stance"],
+        economic_policy=background["economic_policy"],
+        social_authority=background["social_authority"],
+        governmental_power=background["governmental_power"],
+        foreign_policy=background["foreign_policy"],
+        environmental_approach=background["environmental_approach"],
+        national_identity=background["national_identity"],
+        openness=background["openness"],
+        conscientiousness=background["conscientiousness"],
+        extraversion=background["extraversion"],
+        agreeableness=background["agreeableness"],
+        emotional_stability=background["emotional_stability"],
     )
 
 
@@ -256,3 +175,43 @@ def get_closest_response(
         )
 
     return closest[0]
+
+
+def calculate_cosine_similarity(bg1: dict, bg2: dict) -> float:
+    """
+    Calculate the cosine similarity between two background dictionaries.
+    """
+    voter_vector = []
+    candidate_vector = []
+
+    political_attrs = [
+        "economic_policy",
+        "social_authority",
+        "governmental_power",
+        "foreign_policy",
+        "environmental_approach",
+        "national_identity",
+        "openness",
+        "conscientiousness",
+        "extraversion",
+        "agreeableness",
+        "emotional_stability",
+    ]
+    for attr in political_attrs:
+        voter_score = bg1.get(attr, 0)  # Default to neutral 0 if missing
+        cand_score = bg2.get(attr, 0)
+        voter_vector.append(voter_score / 100.0)
+        candidate_vector.append(cand_score / 100.0)
+
+    # cosine similarity
+    voter_vector = np.array(voter_vector)
+    candidate_vector = np.array(candidate_vector)
+
+    dot_product = np.dot(voter_vector, candidate_vector)
+    voter_norm = np.linalg.norm(voter_vector)
+    candidate_norm = np.linalg.norm(candidate_vector)
+
+    if voter_norm == 0 or candidate_norm == 0:
+        return 0
+
+    return dot_product / (voter_norm * candidate_norm)

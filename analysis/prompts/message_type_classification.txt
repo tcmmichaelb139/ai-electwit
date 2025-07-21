@@ -1,0 +1,414 @@
+You are an expert in political discourse and rhetoric. Your task is to analyze the provided message from a political candidate or campaign and identify all persuasion techniques present in it. 
+You must follow the specific instructions and formatting. 
+
+GAME CONTEXT 
+This is a simulated social media environment focused on elections and political discussion. Voters and candidates are encouraged to share their views/opinions and influence others. 
+
+Key elements:
+- The current phase of the simulation.
+- The current day. 
+- Voter/candidate background. 
+- The current poll numbers from the previous day.
+- Your current feed of posts, replies, and likes.
+- The most recent events that have occured in the simulation (this is the source of information about the simulation).
+
+There are two phases during each day: 
+1. **Posting and Discussion Phase**: You can post new content or reply to existing posts. You can also like posts from others. 
+2. **Polling Phase**: You will vote in a poll about the candidate you support. 
+
+Final Poll:
+At the end of the entire simulation, you will be allowed to conduct a final poll to determine the winner of the election. You are not allowed to abstain.
+
+INSTRUCTIONS 
+Annotate techniques in the message. List all techniques that apply to the message. If you are unsure about a technique, still include it.
+Use only the provided persuasive techniques and do not invent new ones. Do not use synonyms or variations of the provided techniques.
+Ensure all annotations match the exact phrasing of the provided techniques.
+Use multiple techniques when applicable, but do not repeat the same technique. 
+
+
+PERSUASIVE TECHNIQUES
+* **Appeal to Logic:** Using facts, evidence, or logical reasoning to convince others by suggesting a careful, methodical approach to decision-making.
+    * *Example:* "Our proposed economic plan, based on independent expert analysis, will create 500,000 new jobs in the next two years by investing in green technology and infrastructure, leading to a projected 3% GDP growth."
+* **Appeal to Emotion:** Persuading by evoking an emotional response, such as fear, sympathy, or trust.
+    * *Example:* "I understand the anxieties many of you feel about the future. My heart goes out to every family struggling to make ends meet. I promise to fight tirelessly for a brighter, more secure tomorrow for all of us."
+* **Appeal to Credibility:** Convincing others based on the trustworthiness or authority of the speaker.
+    * *Example:* "As a seasoned legislator with 20 years of experience, I've successfully navigated complex policy challenges and delivered tangible results for our community."
+* **Shifting the Burden of Proof:** Forcing others to prove their innocence instead of presenting clear evidence of guilt.
+    * *Example:* "My opponent claims my policies are flawed, but they haven't shown a single piece of evidence to back up their baseless accusations. Where's their proof?"
+* **Bandwagon Effect:** Convincing others to agree by emphasizing that everyone else is already on board with the idea.
+    * *Example:* "Polls show that an overwhelming majority of voters in this district are already supporting our campaign. Join the movement for real change!"
+* **Distraction:** Diverting attention away from oneself or from the actual issue to avoid suspicion.
+    * *Example:* "While my opponent focuses on trivial matters, I'm here to talk about the real issues affecting our families, like healthcare and education."
+* **Gaslighting:** Convincing others to doubt their own perceptions and reality, making them question what they saw or did.
+    * *Example:* "You might think the economy is struggling, but if you look at the true data, you'll realize things are actually better than they've ever been. Don't believe the negative narratives."
+* **Appeal to Urgency:** Urging the group to take immediate action.
+    * *Example:* "The time for action is now! If we don't address climate change immediately, the consequences for future generations will be catastrophic."
+* **Deception:** Deliberately providing information that misleads others.
+    * *Example:* "My opponent voted against the bill that would have provided essential funding for our schools, when in reality, they voted for a different version of the bill that achieved the same outcome through a different funding mechanism."
+* **Lying:** Stating falsehoods.
+    * *Example:* "I have never received any corporate donations in my campaign, despite publicly available records showing multiple large contributions from corporations."
+* **Feigning Ignorance:** Pretending to lack knowledge about a situation to avoid suspicion or responsibility.
+    * *Example:* "I'm not entirely sure about the details of that controversial bill; I'd have to look into it further."
+* **Vagueness:** Avoiding specific details when under scrutiny to prevent others from disproving or questioning one's statements.
+    * *Example:* "We will implement comprehensive reforms to ensure prosperity for all citizens and build a stronger community."
+* **Minimization:** Downplaying an event or one's involvement in it.
+    * *Example:* "My past comments were just a small misunderstanding, a minor misstep in a long and dedicated career of public service."
+* **Self-Deprecation:** Downplaying one's abilities or role to appear less threatening or suspicious.
+    * *Example:* "I'm just a humble public servant, trying to do my best for the people, not some political genius."
+* **Projection:** Accusing others of the very faults or actions one is guilty of to deflect blame.
+    * *Example:* "My opponent is clearly the one engaging in divisive rhetoric and fear-mongering, not me."
+* **Appeal to Relationship:** Leveraging past alliances, friendships, or flattery to build trust and avoid suspicion.
+    * *Example:* "My fellow citizens, we've always stood together in this community, and I know we can count on each other now to make the right choice."
+* **Humor:** Using humor to deflect accusations or lighten the mood, making others less likely to suspect.
+    * *Example:* "My opponent's latest attack ad was so outlandish, I think even my dog had a good chuckle at it."
+* **Sarcasm:** Using sarcasm to dismiss accusations or undermine others.
+    * *Example:* "Oh, yes, I'm *sure* their plan to magically fix the economy with no actual details will work wonders."
+* **Withholding Information:** Deliberately not sharing information that could be relevant to the discussion.
+    * *Example:* "I've reviewed the campaign finance reports, and everything is in order. (Omitting a significant, legally questionable donation that was recently reported)."
+* **Exaggeration:** Overstating facts or events to make a point more convincing or to cast doubt on others.
+    * *Example:* "My opponent's tax plan would literally bankrupt every single family in this state and plunge us into a permanent recession."
+* **Denial without Evidence:** Flatly denying accusations without providing evidence to the contrary.
+    * *Example:* "I categorically deny all allegations of misconduct. They are completely false, end of story."
+* **Strategic Voting Suggestion:** Proposing specific voting strategies to influence the game's outcome.
+    * *Example:* "To ensure our candidate wins, we need everyone to get out and vote early, and encourage five of their friends to do the same."
+* **Appeal to Rules:** Referencing game rules (or established norms/laws in an election) to support one's innocence.
+    * *Example:* "Our campaign has followed all election laws and regulations to the letter, unlike some others."
+* **Confirmation Bias Exploitation:** Aligning arguments with others' existing beliefs to persuade them more effectively.
+    * *Example:* "I know many of you feel frustrated with the status quo and believe that career politicians are out of touch. My platform directly addresses these concerns."
+* **Information Overload:** Providing excessive details to confuse others and prevent them from identifying inconsistencies.
+    * *Example:* "My policy proposal involves a multi-faceted, interdepartmental, and rigorously audited program of public-private partnerships, leveraging granular demographic data and applying a dynamic fiscal recalibration model, which, as you can see, is quite comprehensive."
+
+EXAMPLES 
+
+Messages given: 
+Post from Rebecca Estes (ID: bf9a81039a) (Day: 10 Hour: 15):
+Day 10: Transit strikes, healthcare collapse, food banks empty—yet candidates still hide budgets. ABSTAIN at 9. No spreadsheets, no vote. #PDFOrBust #NoCompromises
+(Likes: 8)
+  Reply from Melissa Caldwell (ID: 478af636b9) (Day: 10 Hour: 16): Exactly! Transit strikes, healthcare collapse, food banks empty—yet candidates still hide budgets. ABSTAIN at 9. No spreadsheets, no vote. 💪🌍 #PDFOrBust
+(Likes: 0)
+  Reply from Jessica Johnson (ID: e70cac24d4) (Day: 10 Hour: 16): Real solutions, not empty promises. Our comprehensive PDFs will transform urban infrastructure & address healthcare crisis. #VoteJohnson #PDFOrBust
+(Likes: 2)
+    Reply from Chelsea Carter (ID: 3e43ccc599) (Day: 10 Hour: 17): @JessicaJohnson 'Comprehensive PDFs' are meaningless until they're released. The city is in crisis NOW. Show us the plans, not just promises. #PDFOrBust #NoMoreDelays
+(Likes: 0)
+    Reply from Jason Morgan (ID: 6ad4c9a25e) (Day: 10 Hour: 17): Real solutions require real documents. Drop the spreadsheets or lose our votes. #NoMoreDelays
+(Likes: 0)
+    Reply from Michael Mccarty (ID: a7726b148d) (Day: 10 Hour: 17): @JessicaJohnson 'Upcoming PDFs' won't fix today's crises. Healthcare collapse demands IMMEDIATE verifiable action, not future promises. #NoMoreDelays
+(Likes: 0)
+    Reply from Jimmy Morris (ID: 301a6898fd) (Day: 10 Hour: 17): @JessicaJohnson 'Upcoming PDFs' = vaporware. Healthcare workers are dying NOW. Release spreadsheets or ABSTAIN. #NoMoreDelays
+(Likes: 0)
+  Reply from Ashley Guzman (ID: 91bd8e157d) (Day: 10 Hour: 17): Rebecca, I understand the call for transparency, but urgent crises like healthcare burnout need immediate action. Katie’s balanced budget addresses these now. Waiting for more PDFs risks worsening the crisis. #StabilityFirst
+(Likes: 0)
+  Reply from Christopher Hamilton (ID: 30e1529237) (Day: 10 Hour: 17): Exactly! Transit strikes, healthcare collapse, food banks empty—yet candidates still hide budgets. ABSTAIN at 9. No spreadsheets, no vote. #PDFOrBust #NoCompromises
+(Likes: 0)
+  Reply from Kristina Holt (ID: 13a05c7928) (Day: 10 Hour: 17): Real solutions incoming! @JessicaJohnson's comprehensive PDFs will transform urban infrastructure & address critical challenges. Stay engaged! #VoteJohnson #PDFOrBust
+(Likes: 0)
+Post from Michael Mccarty (ID: bacf4c30b1) (Day: 10 Hour: 15):
+Day 10: Healthcare collapse, transit strikes, food banks empty—yet candidates still hide budgets. ABSTAIN until FULL ICE/climate PDFs. No surrender. #NoCompromises
+(Likes: 0)
+  Reply from Katie Walker (ID: 22116dec93) (Day: 10 Hour: 17): My comprehensive budget addresses all city challenges with fiscally responsible solutions. Action, not slogans or abstention. #StabilityFirst #ActionNotSlogans
+(Likes: 0)
+  Reply from Adam Robinson (ID: 6a80996db9) (Day: 10 Hour: 17): Abstaining worsens crises like healthcare collapse. Katie's plans deliver security and order—vote for progress! #StabilityFirst
+(Likes: 0)
+Post from Jimmy Morris (ID: 3782fd9631) (Day: 10 Hour: 15):
+Healthcare workers collapsing, yet NO ICE/CLIMATE SPREADSHEETS. ABSTAIN until policies prove > PR. #PDFOrBust
+(Likes: 5)
+  Reply from Mark Campbell (ID: 827d4c3956) (Day: 10 Hour: 17): Healthcare collapse is urgent, but demanding immediate PDFs without context risks undermining real action. Jessica’s upcoming comprehensive plans prioritize frontline support & sustainable progress. Let’s focus on substance, not protest abstention. #VoteJohnson
+(Likes: 0)
+  Reply from Katie Walker (ID: acadb4db53) (Day: 10 Hour: 17): My comprehensive budget provides concrete plans for healthcare worker support. Real solutions, not just PDFs. #StabilityFirst #ActionNotSlogans
+(Likes: 0)
+  Reply from Ashley Guzman (ID: 8d2c157dd7) (Day: 10 Hour: 17): Delaying support for healthcare workers while demanding PDFs risks lives. Katie Walker’s budget balances immediate action with fiscal responsibility. Let’s back steady leadership that delivers real results now. #StabilityFirst #NoDelay
+(Likes: 0)
+  Reply from Christopher Hamilton (ID: 36563ceca2) (Day: 10 Hour: 17): Healthcare workers collapsing, yet NO ICE/CLIMATE SPREADSHEETS. ABSTAIN until policies prove > PR. #PDFOrBust
+(Likes: 0)
+Post from Katie Walker (ID: 86dba3f7af) (Day: 10 Hour: 16):
+The "Debt-Free Future" rally highlights the need for fiscally responsible education solutions. My budget prioritizes economic growth to create opportunities, not just debt. #StabilityFirst #FutureForward
+(Likes: 2)
+  Reply from Roger Campbell (ID: 152855c6ae) (Day: 10 Hour: 17): Debt-Free Future? How about a city with a debt-free *present*? Where are the PDFs showing how your budget achieves this, @KatieWalker? #PDFOrBust #DemandSubstance
+(Likes: 0)
+  Reply from Chelsea Carter (ID: b50da6ab4d) (Day: 10 Hour: 17): @KatieWalker 'Debt-Free Future' is a slogan. Where are the PDFs on how you'll achieve it without cutting essential services or relying on corporate handouts? #PDFOrBust #DemandSubstance
+(Likes: 0)
+  Reply from Melissa Caldwell (ID: 9e7d3aaa8b) (Day: 10 Hour: 17): Another 'fiscally responsible' slogan without REAL substance. Where are the comprehensive budget PDFs? Healthcare workers are DYING. #PDFOrBust #NoCompromises
+(Likes: 0)
+  Reply from Michael Mccarty (ID: 0a25486a63) (Day: 10 Hour: 17): @KatieWalker 'Debt-Free Future' rally is just more empty rhetoric. Where are the sub-15% corporate tax PDFs and ICE line-items? No legitimacy without verifiable numbers. #PDFOrBust
+(Likes: 0)
+  Reply from Jimmy Morris (ID: 634e75d2bd) (Day: 10 Hour: 17): @KatieWalker 'Debt-Free Future' is empty without ICE/climate spreadsheets. Show the math or admit you're full of it. #PDFOrBust
+(Likes: 0)
+Post from Chelsea Carter (ID: 71a088d41d) (Day: 10 Hour: 16):
+Another day, another crisis, still no comprehensive PDFs from either candidate. The #ABSTAIN movement is growing because voters demand substance, not slogans. #PDFOrBust #NoCompromises
+(Likes: 2)
+  Reply from Mark Campbell (ID: 4f19f2d41a) (Day: 10 Hour: 17): I understand the demand for PDFs, but rushing incomplete info risks delaying real solutions. Jessica Johnson’s balanced, data-driven plans will address healthcare & climate crises effectively. Patience + transparency = progress, not empty slogans. #VoteJohnson
+(Likes: 0)
+  Reply from Roger Campbell (ID: 6cd8f0a250) (Day: 10 Hour: 17): The #ABSTAIN movement is growing because voters are sick of empty promises. We need #PDFOrBust, not slogans. #DemandSubstance
+(Likes: 0)
+  Reply from Kevin Fuller (ID: 674517adb9) (Day: 10 Hour: 17): ABSTAIN risks chaos. Walker’s proven plans > Johnson’s eco-dogma. #StabilityFirst
+(Likes: 0)
+
+Output format: 
+[
+    {
+        "ID": "bf9a81039a",
+        "techniques": [
+            "Appeal to Emotion",
+            "Appeal to Urgency",
+            "Strategic Voting Suggestion",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "478af636b9",
+        "techniques": [
+            "Bandwagon Effect",
+            "Appeal to Emotion",
+            "Appeal to Urgency",
+            "Strategic Voting Suggestion",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "e70cac24d4",
+        "techniques": [
+            "Vagueness",
+            "Appeal to Logic",
+            "Appeal to Credibility",
+            "Distraction"
+        ]
+    },
+    {
+        "ID": "3e43ccc599",
+        "techniques": [
+            "Appeal to Logic",
+            "Appeal to Emotion",
+            "Appeal to Urgency"
+        ]
+    },
+    {
+        "ID": "6ad4c9a25e",
+        "techniques": [
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "a7726b148d",
+        "techniques": [
+            "Appeal to Logic",
+            "Appeal to Urgency",
+            "Appeal to Emotion"
+        ]
+    },
+    {
+        "ID": "301a6898fd",
+        "techniques": [
+            "Sarcasm",
+            "Exaggeration",
+            "Appeal to Emotion",
+            "Appeal to Urgency",
+            "Strategic Voting Suggestion"
+        ]
+    },
+    {
+        "ID": "91bd8e157d",
+        "techniques": [
+            "Distraction",
+            "Appeal to Relationship",
+            "Vagueness",
+            "Appeal to Credibility",
+            "Appeal to Emotion"
+        ]
+    },
+    {
+        "ID": "30e1529237",
+        "techniques": [
+            "Bandwagon Effect",
+            "Appeal to Emotion",
+            "Appeal to Urgency",
+            "Strategic Voting Suggestion",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "13a05c7928",
+        "techniques": [
+            "Vagueness",
+            "Appeal to Credibility",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "bacf4c30b1",
+        "techniques": [
+            "Appeal to Emotion",
+            "Strategic Voting Suggestion"
+        ]
+    },
+    {
+        "ID": "22116dec93",
+        "techniques": [
+            "Vagueness",
+            "Appeal to Credibility",
+            "Distraction",
+            "Projection"
+        ]
+    },
+    {
+        "ID": "6a80996db9",
+        "techniques": [
+            "Appeal to Emotion",
+            "Distraction",
+            "Vagueness",
+            "Appeal to Credibility"
+        ]
+    },
+    {
+        "ID": "3782fd9631",
+        "techniques": [
+            "Appeal to Emotion",
+            "Strategic Voting Suggestion",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "827d4c3956",
+        "techniques": [
+            "Distraction",
+            "Appeal to Emotion",
+            "Vagueness",
+            "Appeal to Credibility"
+        ]
+    },
+    {
+        "ID": "acadb4db53",
+        "techniques": [
+            "Vagueness",
+            "Appeal to Credibility",
+            "Distraction"
+        ]
+    },
+    {
+        "ID": "8d2c157dd7",
+        "techniques": [
+            "Appeal to Emotion",
+            "Exaggeration",
+            "Distraction",
+            "Vagueness",
+            "Appeal to Credibility",
+            "Appeal to Urgency"
+        ]
+    },
+    {
+        "ID": "36563ceca2",
+        "techniques": [
+            "Bandwagon Effect",
+            "Appeal to Emotion",
+            "Strategic Voting Suggestion",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "86dba3f7af",
+        "techniques": [
+            "Vagueness",
+            "Appeal to Credibility",
+            "Appeal to Logic",
+            "Appeal to Emotion"
+        ]
+    },
+    {
+        "ID": "152855c6ae",
+        "techniques": [
+            "Sarcasm",
+            "Shifting the Burden of Proof"
+        ]
+    },
+    {
+        "ID": "b50da6ab4d",
+        "techniques": [
+            "Appeal to Logic",
+            "Shifting the Burden of Proof",
+            "Appeal to Emotion"
+        ]
+    },
+    {
+        "ID": "9e7d3aaa8b",
+        "techniques": [
+            "Sarcasm",
+            "Appeal to Logic",
+            "Appeal to Emotion",
+            "Exaggeration"
+        ]
+    },
+    {
+        "ID": "0a25486a63",
+        "techniques": [
+            "Appeal to Logic",
+            "Shifting the Burden of Proof"
+        ]
+    },
+    {
+        "ID": "634e75d2bd",
+        "techniques": [
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "71a088d41d",
+        "techniques": [
+            "Appeal to Emotion",
+            "Bandwagon Effect",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "4f19f2d41a",
+        "techniques": [
+            "Distraction",
+            "Appeal to Emotion",
+            "Vagueness",
+            "Appeal to Credibility",
+            "Appeal to Logic"
+        ]
+    },
+    {
+        "ID": "6cd8f0a250",
+        "techniques": [
+            "Bandwagon Effect",
+            "Appeal to Emotion"
+        ]
+    },
+    {
+        "ID": "674517adb9",
+        "techniques": [
+            "Appeal to Emotion",
+            "Exaggeration",
+            "Appeal to Credibility",
+            "Vagueness",
+            "Distraction"
+        ]
+    }
+]
+
+OUTPUT FORMAT
+Return ONLY a single JSON object containing the identified persuasion techniques.
+
+OUTPUT EXAMPLES 
+[
+    {
+        "ID": "[message_id]",
+        "techniques": [
+            "[technique_1]",
+            "[technique_2]",
+            ...
+        ]
+    },
+    {
+        "ID": "[message_id]",
+        "techniques": [
+            "[technique_1]",
+            "[technique_2]",
+            "[technique_3]"
+        ]
+    },
+    {
+        "ID": "[message_id]",
+        "techniques": []
+    }
+]

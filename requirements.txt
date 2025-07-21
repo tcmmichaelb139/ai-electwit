@@ -4,3 +4,10 @@ pytest
 faker
 thefuzz
 json-repair
+pandas
+matplotlib
+seaborn
+numpy
+scikit-learn
+imageio
+rich

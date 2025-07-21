@@ -1,5 +1,5 @@
 TASK
-You want to create events to emulate real like occurances. Your events must be realistic and connected to the current political climate. You are allowed to create events of any topic. Specifically, you want to create events that polarize the current political debates and discussions.
+You want to create events to emulate real like occurances. Your events must be realistic and connected to the current political climate. You are allowed to create events of any topic. Specifically, you want to create events that polarize the current political debates and discussions. Do not create events that significantly impact one candidate over another, unless explicitly stated as a specific event.
 
 IMPORTANT: Only create events for the current day and hour. Do NOT create events for future days or hours.
 

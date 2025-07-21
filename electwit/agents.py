@@ -66,6 +66,7 @@ class BaseAgent:
         role: str,
         chance_to_act: float = 0.5,
         prompt_dir: Optional[str] = None,
+        limit: Optional[int] = None,
     ):
         """
         Initializes ElectionAgent
@@ -87,6 +88,10 @@ class BaseAgent:
         self.consolidated_diary: List[ConsolidatedDiaryEntry] = []  # long term memory
 
         self.old_today_diary: dict[int, List[dict]] = {}
+
+        self.limit = (
+            limit if limit is not None else 5
+        )  # limit for consolidated diary entries
 
     def add_journal_entry(self, entry: str):
         """Adds string entry to the agent's journal for debugging purposes."""
@@ -131,7 +136,7 @@ class BaseAgent:
             logger.info(f"{self.name} has no diary entries to consolidate.")
             return ""
 
-        consolidated_input = self.formatted_consolidated_diary(limit=5)
+        consolidated_input = self.formatted_consolidated_diary(limit=self.limit)
         today_diary_input = self.formatted_today_diary()
 
         consolidation_prompt = load_prompt("consolidation_prompt.txt", self.prompt_dir)
@@ -206,8 +211,9 @@ class ElectionAgent(BaseAgent):
         background: str,
         chance_to_act: float = 0.5,
         prompt_dir: Optional[str] = None,
+        limit: Optional[int] = None,
     ):
-        super().__init__(name, client, role, chance_to_act, prompt_dir)
+        super().__init__(name, client, role, chance_to_act, prompt_dir, limit)
 
         self.background: str = background
 
@@ -221,6 +227,8 @@ class ElectionAgent(BaseAgent):
         self.add_journal_entry(
             f"Initialized {self.role} ElectionAgent: {self.name} with model {self.client.model_name}"
         )
+
+        self.all_posting_actions: List[dict] = []  # keeps all past actions of the agent
 
     async def act_posting(
         self,
@@ -244,7 +252,7 @@ class ElectionAgent(BaseAgent):
             current_hour=hour,
             background=apply_background_prompt(self.background),
             candidates=candidates,
-            consolidated_diary=self.formatted_consolidated_diary(limit=5),
+            consolidated_diary=self.formatted_consolidated_diary(limit=self.limit),
             todays_diary=self.formatted_today_diary(),
             prior_poll_numbers=polling_numbers,
             current_feed=current_feed,
@@ -259,6 +267,10 @@ class ElectionAgent(BaseAgent):
 
         self.actions_in_hour = response[:10] if response else []
         self._validate_actions()
+
+        self.all_posting_actions.append(
+            {"hour": hour, "day": day, "actions": self.actions_in_hour.copy()}
+        )
 
         await self.post_act_posting(
             day=day,
@@ -360,7 +372,7 @@ class ElectionAgent(BaseAgent):
             current_hour=hour,
             background=apply_background_prompt(self.background),
             candidates=candidates,
-            consolidated_diary=self.formatted_consolidated_diary(limit=5),
+            consolidated_diary=self.formatted_consolidated_diary(limit=self.limit),
             todays_diary=self.formatted_today_diary(),
             prior_poll_numbers=polling_numbers,
             current_feed=current_feed,
@@ -489,6 +501,7 @@ Background: {apply_background_prompt(self.background)}
                 for self.consolidated_diary_entry in self.consolidated_diary
             ],
             "all_today_journal_entries": self.old_today_diary,
+            "all_posting_actions": self.all_posting_actions,
         }
 
 
@@ -531,8 +544,9 @@ class EventorAgent(BaseAgent):
         role: str,
         chance_to_act: float = 0.5,
         prompt_dir: Optional[str] = None,
+        limit: Optional[int] = None,
     ):
-        super().__init__(name, client, role, chance_to_act, prompt_dir)
+        super().__init__(name, client, role, chance_to_act, prompt_dir, limit)
 
         self.events: List[Event] = []
 
@@ -598,7 +612,7 @@ class EventorAgent(BaseAgent):
             poll=recent_poll,
             previous_events=self.get_formatted_events(limit=event_limit),
             today_diary=self.formatted_today_diary(),
-            consolidated_diary=self.formatted_consolidated_diary(limit=5),
+            consolidated_diary=self.formatted_consolidated_diary(limit=self.limit),
         )
 
         logger.debug(f"Content prompt for event creation: {content_prompt}")
