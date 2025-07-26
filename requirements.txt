@@ -11,3 +11,5 @@ numpy
 scikit-learn
 imageio
 rich
+networkx
+plotly

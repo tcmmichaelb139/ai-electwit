@@ -64,14 +64,6 @@ class BaseModelClient:
             logger.warning(f"[{self.model_name}] Empty response generated.")
             return []
 
-        # check for [ and ]
-        code_fence_pattern = r"(?:.|\n)*?(\[(?:.|\n)*?\])(?:.|\n)*?"
-        matches = re.search(code_fence_pattern, response, re.DOTALL)
-
-        if matches:
-            response = matches.group(1).strip()
-            logger.debug(f"[{self.model_name}] Cleaned JSON response: {response}")
-
         response_json = json_repair.loads(response)
 
         if not isinstance(response_json, list):
@@ -110,37 +102,42 @@ class OpenRouterClient(BaseModelClient):
         Generates a response from the OpenRouter API using the specified model.
         """
 
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=temperature,
-                max_tokens=self.max_tokens,
-            )
-
-            if not response.choices:
-                logger.warning(f"[{self.model_name}] No choices returned in response.")
-                return ""
-
-            logger.debug(f"[{self.model_name}] Response: {response}")
-
-            content = response.choices[0].message.content.strip()
-
-            if not content:
-                logger.warning(
-                    f"[{self.model_name}] Empty content returned in response."
+        for _ in range(3):
+            try:
+                response = await self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=temperature,
+                    max_tokens=self.max_tokens,
                 )
-                return ""
 
-            return content
+                if not response.choices:
+                    logger.warning(
+                        f"[{self.model_name}] No choices returned in response."
+                    )
+                    return ""
 
-        except Exception as e:
-            logger.error(f"Error generating response: {e}")
+                logger.debug(f"[{self.model_name}] Response: {response}")
 
-            raise e
+                content = response.choices[0].message.content.strip()
+
+                if not content:
+                    logger.warning(
+                        f"[{self.model_name}] Empty content returned in response."
+                    )
+                    return ""
+
+                return content
+
+            except Exception as e:
+                logger.error(f"Error generating response: {e}")
+                continue
+
+        logger.error(f"[{self.model_name}] Failed to generate response after retries.")
+        return ""
 
 
 def load_model_client(

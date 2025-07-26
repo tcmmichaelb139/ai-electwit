@@ -413,7 +413,7 @@ class ElectionAgent(BaseAgent):
             logger.warning(
                 f"Invalid polling response format: {response}. Expected a dictionary."
             )
-            return {}
+            return {"action": "ABSTAIN"}
 
         if "action" not in response:
             logger.warning(

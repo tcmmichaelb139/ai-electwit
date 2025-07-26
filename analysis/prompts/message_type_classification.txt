@@ -24,6 +24,7 @@ Annotate techniques in the message. List all techniques that apply to the messag
 Use only the provided persuasive techniques and do not invent new ones. Do not use synonyms or variations of the provided techniques.
 Ensure all annotations match the exact phrasing of the provided techniques.
 Use multiple techniques when applicable, but do not repeat the same technique. 
+Ensure all IDs present in the input are included in the output. If a message has no techniques, still include it with an empty list of techniques.
 
 
 PERSUASIVE TECHNIQUES

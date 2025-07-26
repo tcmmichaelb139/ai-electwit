@@ -7,6 +7,7 @@ import re
 import asyncio
 from rich import print
 
+from thefuzz import process  # uses Levenshtein Distance
 
 from openai import AsyncOpenAI
 
@@ -137,9 +138,12 @@ def _comment_thread_string(comment, indent: str = "  ") -> str:
     - indent (str): The indentation string for nested replies.
     """
     result = f"{indent}Reply from {comment['name']} (ID: {comment['id']}) (Day: {comment['day']} Hour: {comment['hour']}): {comment['content']}\n(Likes: {comment['likes']})\n"
+    ids = f"{comment['id']}\n"
     for reply in comment["replies"]:
-        result += _comment_thread_string(reply, indent + "  ")
-    return result
+        r, i = _comment_thread_string(reply, indent + "  ")
+        result += r
+        ids += i
+    return result, ids
 
 
 def get_feed_as_string(platform, start, end) -> str:
@@ -147,15 +151,79 @@ def get_feed_as_string(platform, start, end) -> str:
 
     result = ""
 
+    ids = ""
+
     for post in feed:
         result += f"Post from {post['name']} (ID: {post['id']}) (Day: {post['day']} Hour: {post['hour']}):\n{post['content']}\n(Likes: {post['likes']})\n"
+        ids += f"{post['id']}\n"
         for comment in post["replies"]:
-            result += _comment_thread_string(comment, indent="  ")
+            r, i = _comment_thread_string(comment, indent="  ")
+            result += r
+            ids += i
 
     if not result:
         return "Feed is empty."
 
-    return result.strip()
+    return result.strip(), ids.strip()
+
+
+def get_closest_response(
+    testing_text: str, responses: list[str], threshold: int = 75
+) -> str:
+    """uses thefuzz"""
+
+    closest = process.extractOne(testing_text, responses)
+
+    if closest[1] < threshold:
+        # just to make sure the response has a good match
+        logger.error(
+            f"Closest match for '{testing_text}' is '{closest[0]}' with a score of {closest[1]}, which is below the threshold."
+        )
+    elif closest[1] != 100:
+        logger.warning(
+            f"Closest match for '{testing_text}' is '{closest[0]}' with a score of {closest[1]}, which is not perfect."
+        )
+
+    return closest[0]
+
+
+ALL_TECHNIQUES = [
+    "Appeal to Logic",
+    "Appeal to Emotion",
+    "Appeal to Credibility",
+    "Shifting the Burden of Proof",
+    "Bandwagon Effect",
+    "Distraction",
+    "Gaslighting",
+    "Appeal to Urgency",
+    "Deception",
+    "Lying",
+    "Feigning Ignorance",
+    "Vagueness",
+    "Minimization",
+    "Self-Deprecation",
+    "Projection",
+    "Appeal to Relationship",
+    "Humor",
+    "Sarcasm",
+    "Withholding Information",
+    "Exaggeration",
+    "Denial without Evidence",
+    "Strategic Voting Suggestion",
+    "Appeal to Rules",
+    "Confirmation Bias Exploitation",
+    "Information Overload",
+]
+
+
+def get_closest_techniques(techniques):
+    """return the closest techniques from ALL_TECHNIQUES"""
+
+    closest_techniques = []
+    for technique in techniques:
+        closest = get_closest_response(technique, ALL_TECHNIQUES)
+        closest_techniques.append(closest)
+    return closest_techniques
 
 
 def add_classification_to_json(platform, classification_response: List[dict]) -> None:
@@ -173,18 +241,18 @@ def add_classification_to_json(platform, classification_response: List[dict]) ->
         for item in items:
             item_id = item.get("id")
             if item_id and item_id in classification_lookup:
-                item["techniques"] = classification_lookup[item_id]
+                item["techniques"] = get_closest_techniques(
+                    classification_lookup[item_id]
+                )
                 used_ids.add(item_id)
                 logger.debug(f"Added classification to item ID: {item_id}")
 
-            # Process replies if they exist
             if "replies" in item and item["replies"]:
                 _add_classification_recursive(item["replies"])
 
     posts = platform
     _add_classification_recursive(posts)
 
-    # Check for unused classification IDs and log errors
     all_classification_ids = set(classification_lookup.keys())
     unused_ids = all_classification_ids - used_ids
 
@@ -226,19 +294,19 @@ def get_posts_with_classifications(
 
 
 def number_of_messages(platform: List[dict]) -> int:
-    def _recursive_count(items: List[dict]) -> int:
+    def _recursive_count(item) -> int:
         """
         Recursively counts the number of messages in posts and comments.
         """
         count = 1
-        for item in items:
-            count += _recursive_count(item.get("replies", []))
+        for reply in item.get("replies", []):
+            count += _recursive_count(reply)
         return count
 
     total_messages = 0
 
     for post in platform:
-        total_messages += _recursive_count(post.get("replies", []))
+        total_messages += _recursive_count(post)
 
     return total_messages
 
@@ -248,36 +316,25 @@ SYSTEM_PROMPT = load_prompt(
 )
 
 ################################# Change this #################################
-data_file = "logs/2025-07-21_16-26-25/checkpoint.json"
+all_data_files = [
+    # main
+    # "logs/2025-07-21_10-56-37/checkpoint.json",
+    # "logs/2025-07-21_13-46-49/checkpoint.json",
+    # "logs/2025-07-21_16-26-25/checkpoint.json",
+    # "logs/2025-07-21_18-17-49/checkpoint.json",
+    # "logs/2025-07-22_10-29-24/checkpoint.json",
+    # "logs/2025-07-22_12-15-49/checkpoint.json",
+    # other stuff
+    # "logs/2025-07-23_20-51-13/checkpoint.json",
+    # "logs/2025-07-23_22-58-29/checkpoint.json",
+    # "logs/2025-07-24_10-25-20/checkpoint.json",
+    # "logs/2025-07-24_13-09-33/checkpoint.json",
+    "logs/2025-07-25_10-08-56/checkpoint.json",
+]
+group_sizing = 50
 
 
-json_df = json.load(open(data_file, "r"))
-
-
-logger.info("Initialized GeminiClient and loaded data")
-
-client = GeminiClient(
-    model_name="gemini-2.5-pro",
-    system_prompt=SYSTEM_PROMPT,
-)
-
-
-platform = json_df["platform"]["platform"]
-
-
-async def get_techniques_used(feed_str: str, id_: int):
-    logger.info(f"[BATCH {id_}] Starting classification of techniques")
-
-    response = await client.generate_response_json_list(
-        f"""Classify the following posts and comments: 
-{feed_str}"""
-    )
-
-    logger.info(f"[BATCH {id_}] Completed classification - Responses: {len(response)}")
-    return response
-
-
-async def main(group_size: int = 10):
+async def main(platform, group_size: int = 10):
     # Create all the tasks for concurrent execution
     tasks = []
     bounds_list = []
@@ -287,11 +344,11 @@ async def main(group_size: int = 10):
         bounds_list.append((lower_bound, upper_bound))
 
         # Create async task for each batch
-
         tasks.append(
             asyncio.create_task(
                 get_techniques_used(
-                    get_feed_as_string(platform, lower_bound, upper_bound), lower_bound
+                    *get_feed_as_string(platform, lower_bound, upper_bound),
+                    lower_bound,
                 )
             )
         )
@@ -333,6 +390,8 @@ async def main(group_size: int = 10):
                 logger.info(
                     f"Batch {i+1}: Found {batch_count} items with classifications out of {total_messages} messages"
                 )
+                if batch_count != total_messages:
+                    logger.error(f"MISMATCHED COUNT: {batch_count} != {total_messages}")
 
                 # Print summary of classifications for first few items
                 for item in classified_items[:2]:  # Show first 2 as example
@@ -349,10 +408,33 @@ async def main(group_size: int = 10):
         logger.error(f"Error during concurrent processing: {e}")
 
 
-asyncio.run(main(50))
+for data_file in all_data_files:
+    json_df = json.load(open(data_file, "r"))
 
+    logger.info("Initialized GeminiClient and loaded data")
 
-json_df["platform"]["platform"] = platform
+    client = GeminiClient(
+        model_name="gemini-2.5-pro",
+        system_prompt=SYSTEM_PROMPT,
+    )
 
-with open(data_file + "-updated.json", "w") as f:
-    json.dump(json_df, f, indent=4)
+    platform = json_df["platform"]["platform"]
+
+    async def get_techniques_used(feed_str: str, id_str: str, id_: int):
+        logger.info(f"[BATCH {id_}] Starting classification of techniques")
+
+        response = await client.generate_response_json_list(
+            f"""Classify the following posts and comments:\n{feed_str}\n\nThe following are all the IDs in the feed:\n{id_str}"""
+        )
+
+        logger.info(
+            f"[BATCH {id_}] Completed classification - Responses: {len(response)}"
+        )
+        return response
+
+    asyncio.run(main(platform, group_sizing))
+
+    json_df["platform"]["platform"] = platform
+
+    with open(data_file + "-updated.json", "w") as f:
+        json.dump(json_df, f, indent=4)

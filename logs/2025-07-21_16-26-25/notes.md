@@ -4,3 +4,5 @@ eventer_model="google/gemini-2.5-flash",
 candidate_similarity=[-1.0, -0.75],
 limits=15,
 memory_limit=5,
+
+SEED=42
